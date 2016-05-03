@@ -27,7 +27,7 @@ Installation
         git clone git@github.com:slackhq/python-rtmbot.git
         cd python-rtmbot
 
-2. Before installing dependencies, it is recommended that use virtualenv
+2. Before installing dependencies, it is recommended that use virtualenv (python 2.6 is *NOT* supported)
 
         virtualenv -p /usr/bin/python2.7 <path/to/virtualenv/>
 
