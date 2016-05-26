@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 from slackclient import SlackClient
-from token import token
+import yaml
+
+config = yaml.load(open('rtmbot.conf', 'r'))
+token = config.get('SLACK_TOKEN')
 
 def get_channelname_from_id(channel_id):
     sc = SlackClient(token)
