@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from slackclient import SlackClient
+from token import token
 
 def get_channelname_from_id(channel_id):
     sc = SlackClient(token)
