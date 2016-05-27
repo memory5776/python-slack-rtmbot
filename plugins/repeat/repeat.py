@@ -41,17 +41,9 @@ def cmd_1(cmd, channel_id, username, sc):
             for row in result:
                 output_msg = output_msg + u"{}: {}\n".format(row[0], row[1])
             sc.api_call( "chat.postMessage", channel="#bot-dev-test", text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        #elif cmd in ["!tarot"]:
-            #card = random.choice(tarot_cards)
-            #output_msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
-            #output_msg += "image: {}\n".format(card["url"])
-            #output_msg += "love: {}\n".format(card["love"].encode('utf-8'))
-            #output_msg += "work: {}\n".format(card["work"].encode('utf-8'))
-            #output_msg += "health: {}\n".format(card["health"].encode('utf-8'))
-            #output_msg += "joy: {}\n".format(card["joy"].encode('utf-8'))
-            #output_msg += "other: {}\n".format(card["other"].encode('utf-8'))
-            #output_msg += "conclusion: {}\n".format(card["conclusion"].encode('utf-8'))
-            #sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
+        elif cmd in ["!tarot"]:
+            output_msg = u"@{}想問什麼呢？(!tarot love/work/health/money/joy)\n".format(username)
+            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
     conn.close()
 
 def cmd_2(cmd, target, channel_id, username, sc):
@@ -103,8 +95,9 @@ def cmd_2(cmd, target, channel_id, username, sc):
                 output_msg += "{}\n".format(card["health"].encode('utf-8'))
             elif target in ["joy","娛樂"]:
                 output_msg += "{}\n".format(card["joy"].encode('utf-8'))
-            else:
-                output_msg += "{}\n".format(card["other"].encode('utf-8'))
+            elif target in ["money","財富"]:
+                output_msg += "{}\n".format(card["money"].encode('utf-8'))
+            output_msg += "總結：{}\n".format(card["conclusion"].encode('utf-8'))
             sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
     conn.commit()
     conn.close()
