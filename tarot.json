@@ -14,7 +14,7 @@
  {
    "no":"00R",
    "nameEN":"The Fool",
-   "nameCN":"愚人",
+   "nameCN":"愚人（逆）",
    "love":"盲目、忽冷忽熱",
    "work":"缺乏穩定性、無責任心",
    "health":"不安定的生活而生病",
@@ -38,7 +38,7 @@
  {
    "no":"01R",
    "nameEN":"The Magician",
-   "nameCN":"魔術師",
+   "nameCN":"魔術師（逆）",
    "love":"缺乏創意的愛情",
    "work":"失敗",
    "health":"健康不佳",
@@ -62,7 +62,7 @@
  {
    "no":"02R",
    "nameEN":"The High Priestess",
-   "nameCN":"女祭司",
+   "nameCN":"女祭司（逆）",
    "love":"無法實現的相思",
    "work":"缺乏足夠的智慧",
    "health":"精神上的壓力",
@@ -86,7 +86,7 @@
  {
    "no":"03R",
    "nameEN":"The Empress",
-   "nameCN":"皇后",
+   "nameCN":"皇后（逆）",
    "love":"沒有結果的愛",
    "work":"業績下降",
    "health":"太胖",
@@ -110,7 +110,7 @@
  {
    "no":"04R",
    "nameEN":"The Emperor",
-   "nameCN":"皇帝",
+   "nameCN":"皇帝（逆）",
    "love":"被人擺佈",
    "work":"欠缺管理",
    "health":"注意成人病",
@@ -134,7 +134,7 @@
  {
    "no":"05R",
    "nameEN":"The Hierophant",
-   "nameCN":"教宗",
+   "nameCN":"教宗（逆）",
    "love":"無緣",
    "work":"被孤立",
    "health":"精神疲憊",
@@ -158,7 +158,7 @@
  {
    "no":"06R",
    "nameEN":"The Lover",
-   "nameCN":"戀人",
+   "nameCN":"戀人（逆）",
    "love":"分手",
    "work":"解聘、辭職",
    "health":"失去年輕",
@@ -182,7 +182,7 @@
  {
    "no":"07R",
    "nameEN":"The Chariot",
-   "nameCN":"戰車",
+   "nameCN":"戰車（逆）",
    "love":"被拋棄",
    "work":"挫折多",
    "health":"注意事故",
@@ -206,7 +206,7 @@
  {
    "no":"08R",
    "nameEN":"The Strength",
-   "nameCN":"力量",
+   "nameCN":"力量（逆）",
    "love":"控制不了自己",
    "work":"未做以前先放棄",
    "health":"體力變差",
@@ -230,7 +230,7 @@
  {
    "no":"09R",
    "nameEN":"The Hermit",
-   "nameCN":"隱士",
+   "nameCN":"隱士（逆）",
    "love":"不被瞭解的寂寞",
    "work":"注意力不集中",
    "health":"有慢性病",
@@ -254,7 +254,7 @@
  {
    "no":"10R",
    "nameEN":"The Wheel of Fortune",
-   "nameCN":"命運之輪",
+   "nameCN":"命運之輪（逆）",
    "love":"曇花一現的戀情",
    "work":"低潮期",
    "health":"健康惡化",
@@ -278,7 +278,7 @@
  {
    "no":"11R",
    "nameEN":"The Justice",
-   "nameCN":"正義",
+   "nameCN":"正義（逆）",
    "love":"單戀",
    "work":"偏見",
    "health":"避免對健康獨斷的態度",
@@ -302,7 +302,7 @@
  {
    "no":"12R",
    "nameEN":"The Hanged Man",
-   "nameCN":"吊人",
+   "nameCN":"吊人（逆）",
    "love":"得不到回報的愛",
    "work":"陷入困境",
    "health":"再不愛惜自己就會毀謬",
@@ -326,7 +326,7 @@
  {
    "no":"13R",
    "nameEN":"The Death",
-   "nameCN":"死神",
+   "nameCN":"死神（逆）",
    "love":"舊愛重燃",
    "work":"改革、起死回生",
    "health":"治療成功",
@@ -350,7 +350,7 @@
  {
    "no":"14R",
    "nameEN":"Temperance",
-   "nameCN":"節制",
+   "nameCN":"節制（逆）",
    "love":"相處不融洽",
    "work":"白費心力",
    "health":"身體宜多調養",
@@ -374,7 +374,7 @@
  {
    "no":"15R",
    "nameEN":"The Devil",
-   "nameCN":"惡魔",
+   "nameCN":"惡魔（逆）",
    "love":"快刀斬亂麻",
    "work":"景氣恢復",
    "health":"擺脫老毛病",
@@ -398,7 +398,7 @@
  {
    "no":"16R",
    "nameEN":"The Tower",
-   "nameCN":"塔",
+   "nameCN":"塔（逆）",
    "love":"緊張氣氛",
    "work":"內鬥多",
    "health":"對疾病不安",
@@ -422,7 +422,7 @@
  {
    "no":"17R",
    "nameEN":"The Star",
-   "nameCN":"星星",
+   "nameCN":"星星（逆）",
    "love":"期望過高的愛",
    "work":"為五斗米折腰",
    "health":"衰老",
@@ -446,7 +446,7 @@
  {
    "no":"18R",
    "nameEN":"The Moon",
-   "nameCN":"月亮",
+   "nameCN":"月亮（逆）",
    "love":"先靜觀其變",
    "work":"逐漸好轉",
    "health":"找到病因",
@@ -470,7 +470,7 @@
  {
    "no":"19R",
    "nameEN":"The Sun",
-   "nameCN":"太陽",
+   "nameCN":"太陽（逆）",
    "love":"破碎的愛",
    "work":"沒有工作意願",
    "health":"體弱多病",
@@ -494,7 +494,7 @@
  {
    "no":"20R",
    "nameEN":"The Judgement",
-   "nameCN":"審判",
+   "nameCN":"審判（逆）",
    "love":"無法挽回",
    "work":"舉步維艱",
    "health":"舊病復發",
@@ -518,7 +518,7 @@
  {
    "no":"21R",
    "nameEN":"The World",
-   "nameCN":"世界",
+   "nameCN":"世界（逆）",
    "love":"勞燕分飛",
    "work":"達不到預期目標",
    "health":"疲勞",
