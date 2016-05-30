@@ -30,6 +30,7 @@ Installation
 2. Before installing dependencies, it is recommended that use virtualenv (python 2.6 is *NOT* supported)
 
         virtualenv -p /usr/bin/python2.7 <path/to/virtualenv/>
+        sudo apt-get install libffi-dev libssl-dev # for pyOpenSSL
 
 2. Install dependencies ([virtualenv](http://virtualenv.readthedocs.org/en/latest/) is recommended.)
 
