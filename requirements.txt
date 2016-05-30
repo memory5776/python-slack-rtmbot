@@ -3,3 +3,5 @@ python-daemon
 pyyaml
 websocket-client
 slackclient
+ndg-httpsclient==0.4.0
+pyOpenSSL==16.0.0
