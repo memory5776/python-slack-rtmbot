@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 crontable = []
 outputs = []
-from slack_util import get_username_from_id, get_channelname_from_id, get_client
+from slack_util import get_username, get_channelname, get_client
 import sqlite3
 from pprint import pprint
 import json
@@ -10,106 +10,130 @@ friend_await = {}
 friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
 
+def slack_post_message(sc, channel, text, username='schubot', icon_emoji=':rabbit:'):
+    sc.api_call("chat.postMessage", channel=channel, text=text, username=username, icon_emoji=icon_emoji)
 
+def help():
+    msg = [
+        u"!touch [user]: 碰一下 [user]",
+        u"!work [user]: 逼 [user] 工作",
+        u"!friend [user]: 跟 [user] 交朋友",
+        u"!tarot: 抽塔羅牌"
+    ]
+    return "\n".join(msg).encode('utf-8')
+
+def flist():
+    conn = sqlite3.connect('example.db')
+    c = conn.cursor()
+    c.execute('''create table if not exists friends (id INTEGER PRIMARY KEY AUTOINCREMENT, user_a TEXT, user_b TEXT, UNIQUE (user_a, user_b) ON CONFLICT IGNORE)''')
+    c.execute('''select user_a, user_b from friends''')
+    result = c.fetchall()
+    conn.close()
+
+    msg = []
+    msg.append(u"貴圈真亂".encode('utf-8'))
+    for row in result:
+        msg.append("{} <=> {}".format(row[0], row[1]))
+    return "\n".join(msg)
+
+def freq():
+    conn = sqlite3.connect('example.db')
+    c = conn.cursor()
+    c.execute('''SELECT * from chat_freq order by count desc''')
+    result = c.fetchall()
+    msg = []
+    msg.append(u"話多排行榜:".encode('utf8'))
+    for row in result:
+        msg.append("{}: {}".format(row[0], row[1]))
+
+    c.execute('''SELECT * from cmd_freq order by count desc''')
+    result = c.fetchall()
+    conn.close()
+    msg.append(u"愛玩機器人排行榜".encode('utf-8'))
+    for row in result:
+        msg.append("{}: {}".format(row[0], row[1]))
+    return "\n".join(msg)
+
+def tarot():
+    card = random.choice(tarot_cards)
+    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
+    msg += "image: {}\n".format(card["url"])
+    msg += "love: {}\n".format(card["love"].encode('utf-8'))
+    msg += "work: {}\n".format(card["work"].encode('utf-8'))
+    msg += "health: {}\n".format(card["health"].encode('utf-8'))
+    msg += "joy: {}\n".format(card["joy"].encode('utf-8'))
+    msg += "other: {}\n".format(card["other"].encode('utf-8'))
+    msg += "conclusion: {}\n".format(card["conclusion"].encode('utf-8'))
+    return msg
+
+#TODO: unify cmd_1 and cmd_2 by **kwargs
 def cmd_1(cmd, channel_id, username, sc):
-    conn = sqlite3.connect('example.db')
-    c = conn.cursor()
-    #if channel_id in ['C0JKD2HMM', 'bot-dev-test', 'C0J4UTXL0']:
-    if True:
-        if cmd in [u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
-            output_msg = u"!touch [user]: 碰一下 [user]\n!work [user]: 逼 [user] 工作\n!friend [user]: 跟 [user] 交朋友\n!tarot: 抽塔羅牌\n"
-            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ['!flist']:
-            c.execute('''create table if not exists friends (id INTEGER PRIMARY KEY AUTOINCREMENT, user_a TEXT, user_b TEXT, UNIQUE (user_a, user_b) ON CONFLICT IGNORE)''')
-            c.execute('''select user_a, user_b from friends''')
-            result = c.fetchall()
-            output_msg = u"貴圈真亂\n"
-            for row in result:
-                output_msg = output_msg + u"{} <=> {}\n".format(row[0], row[1])
-            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ['!freq']:
-            c.execute('''SELECT * from chat_freq''')
-            result = c.fetchall()
-            output_msg = u"廢話次數統計\n"
-            for row in result:
-                output_msg = output_msg + u"{}: {}\n".format(row[0], row[1])
-            sc.api_call( "chat.postMessage", channel="#bot-dev-test", text=output_msg, username='schubot', icon_emoji=':rabbit:')
-
-            c.execute('''SELECT * from cmd_freq''')
-            result = c.fetchall()
-            output_msg = u"呼叫機器人次數統計\n"
-            for row in result:
-                output_msg = output_msg + u"{}: {}\n".format(row[0], row[1])
-            sc.api_call( "chat.postMessage", channel="#bot-dev-test", text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ["!tarot"]:
-            card = random.choice(tarot_cards)
-            output_msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
-            output_msg += "image: {}\n".format(card["url"])
-            output_msg += "love: {}\n".format(card["love"].encode('utf-8'))
-            output_msg += "work: {}\n".format(card["work"].encode('utf-8'))
-            output_msg += "health: {}\n".format(card["health"].encode('utf-8'))
-            output_msg += "joy: {}\n".format(card["joy"].encode('utf-8'))
-            output_msg += "other: {}\n".format(card["other"].encode('utf-8'))
-            output_msg += "conclusion: {}\n".format(card["conclusion"].encode('utf-8'))
-            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-    conn.close()
-
-def cmd_2(cmd, target, channel_id, username, sc):
-    #outputs.append([data['channel'], output_msg])
-    conn = sqlite3.connect('example.db')
-    c = conn.cursor()
-    #if channel_id in ['C0JKD2HMM', 'bot-dev-test', 'C0J4UTXL0']:
-    if True:
-        if cmd == u'!touch':
-            output_msg = u"@{} 碰ㄌ一下 @{} 沒想到就死去了".format(username, target)
-            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ["!work", u"!工作"]:
-            output_msg = u"@{} 在 @{} 的監督下辛勤地工作".format(target, username)
-            sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ["!friend"]:
-            if username not in friend_await:
-                friend_await[username] = []
-            if target not in friend_await[username]:
-                friend_await[username].append(target)
-                output_msg = u"@{} 想跟 @{} 做朋友（輸入 !yfriend {} 同意）".format(username, target, username)
-                sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-            else:
-                output_msg = u"@{} 人家還沒回應你在急屁急".format(username)
-                sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-        elif cmd in ["!yfriend"]:
-            if target in friend_await:
-                if username in friend_await[target]:
-                    output_msg = u"@{} 接受了 @{} 的好友邀請，現在他們是好碰友".format(username, target)
-                    sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-                    #friend_sets.append(set([username, target]))
-                    c.execute('''create table if not exists friends (id INTEGER PRIMARY KEY AUTOINCREMENT, user_a TEXT, user_b TEXT, UNIQUE (user_a, user_b) ON CONFLICT IGNORE)''')
-                    c.execute('''INSERT INTO friends (user_a, user_b) VALUES (\'{}\', \'{}\');'''.format(username, target))
-                    friend_await[target].remove(username)
-                else:
-                    output_msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
-                    sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-            else:
-                output_msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
-                sc.api_call( "chat.postMessage", channel=channel_id, text=output_msg, username='schubot', icon_emoji=':rabbit:')
-    conn.commit()
-    conn.close()
-
-def process_message(data):
-    #pprint(data)
-    channel_id = data['channel']
-    channelname = get_channelname_from_id(channel_id)
-    if data.get('username', '') == 'schubot':
-        return
-    elif 'user' in data:
-        user_id = data['user']
+    if cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
+        msg = help()
+    elif cmd in ['!flist']:
+        msg = flist()
+    elif cmd in ['!freq']:
+        msg = freq()
+    elif cmd in ["!tarot"]:
+        msg = tarot()
     else:
         return
-    username = get_username_from_id(user_id)
-    print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), username, channelname, channel_id))
+    slack_post_message(sc, channel_id, msg)
 
+def touch(user, target):
+    msg = u"@{} 碰ㄌ一下 @{} 沒想到就死去了".format(user, target).encode('utf-8')
+    return msg
+
+def work(user, target):
+    msg = u"@{} 在 @{} 的監督下辛勤地工作".format(target, user).encode('utf-8')
+    return msg
+
+def friend(user, target):
+    global friend_await
+    if user not in friend_await:
+        friend_await[user] = []
+    if target not in friend_await[user]:
+        friend_await[user].append(target)
+        msg = u"@{} 想跟 @{} 做朋友（輸入 !yfriend {} 同意）".format(user, target, user)
+    else:
+        msg = u"@{} 人家還沒回應你在急屁急".format(user)
+    return msg
+
+def yfriend(user, target):
+    if target in friend_await:
+        if user in friend_await[target]:
+            conn = sqlite3.connect('example.db')
+            c = conn.cursor()
+            msg = u"@{} 接受了 @{} 的好友邀請，現在他們是好碰友".format(user, target)
+            #friend_sets.append(set([user, target]))
+            c.execute('''create table if not exists friends (id INTEGER PRIMARY KEY AUTOINCREMENT, user_a TEXT, user_b TEXT, UNIQUE (user_a, user_b) ON CONFLICT IGNORE)''')
+            c.execute('''INSERT INTO friends (user_a, user_b) VALUES (\'{}\', \'{}\');'''.format(user, target))
+            friend_await[target].remove(user)
+            conn.commit()
+            conn.close()
+        else:
+            msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
+    else:
+        msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
+    return msg
+
+def cmd_2(cmd, target, channel_id, username, sc):
+    if cmd == u'!touch':
+        msg = touch(username, target)
+    elif cmd in ["!work", u"!工作"]:
+        msg = work(username, target)
+    elif cmd in ["!friend"]:
+        msg = friend(username, target)
+    elif cmd in ["!yfriend"]:
+        msg = yfriend(username, target)
+    else:
+        return
+    slack_post_message(sc, channel_id, msg)
+
+def update_freq(text, user):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
-    if data['text'].startswith('!'):
+    if text.startswith('!'):
         freq_table = 'cmd_freq'
     else:
         freq_table = 'chat_freq'
@@ -117,20 +141,41 @@ def process_message(data):
     c.execute('''INSERT OR REPLACE INTO {} (user, count)
                  VALUES ( \'{}\',
                      COALESCE((SELECT count FROM {} WHERE user = \'{}\'), 0)
-                 );'''.format(freq_table, username, freq_table, username))
-    c.execute('''UPDATE {} SET count = count + 1 WHERE user = \'{}\';'''.format(freq_table, username))
-    c.execute('''SELECT * from {}'''.format(freq_table))
+                 );'''.format(freq_table, user, freq_table, user))
+    c.execute('''UPDATE {} SET count = count + 1 WHERE user = \'{}\';'''.format(freq_table, user))
+    #c.execute('''SELECT * from {}'''.format(freq_table))
     #result = c.fetchall()
     #pprint(result)
     conn.commit()
     conn.close()
+
+def get_user_id(data):
+    if data.get('username', '') == 'schubot':
+        return None
+    elif 'user' in data:
+        return data['user']
+    else:
+        return None
+
+def process_message(data):
+    #pprint(data)
+    channel_id = data['channel']
+    channelname = get_channelname(channel_id)
+    user_id = get_user_id(data)
+    if not user_id:
+        return
+    user = get_username_from_id(user_id)
+    print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
+
     msgs = data['text'].split(" ")
     sc = get_client()
     if len(msgs) == 2:
         cmd = msgs[0]
         target = msgs[1]
-        cmd_2(cmd, target, channel_id, username, sc)
+        cmd_2(cmd, target, channel_id, user, sc)
     else:
         cmd = msgs[0]
-        cmd_1(cmd, channel_id, username, sc)
+        cmd_1(cmd, channel_id, user, sc)
+
+    update_freq(data['text'], user)
 
