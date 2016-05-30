@@ -54,17 +54,10 @@ def freq():
         msg.append("{}: {}".format(row[0], row[1]))
     return "\n".join(msg)
 
-def tarot():
-    card = random.choice(tarot_cards)
-    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
-    msg += "image: {}\n".format(card["url"])
-    msg += "love: {}\n".format(card["love"].encode('utf-8'))
-    msg += "work: {}\n".format(card["work"].encode('utf-8'))
-    msg += "health: {}\n".format(card["health"].encode('utf-8'))
-    msg += "joy: {}\n".format(card["joy"].encode('utf-8'))
-    msg += "other: {}\n".format(card["other"].encode('utf-8'))
-    msg += "conclusion: {}\n".format(card["conclusion"].encode('utf-8'))
+def tarot(user):
+    msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy)".format(user).encode('utf-8')
     return msg
+
 
 #TODO: unify cmd_1 and cmd_2 by **kwargs
 def cmd_1(cmd, channel_id, username, sc):
@@ -75,10 +68,27 @@ def cmd_1(cmd, channel_id, username, sc):
     elif cmd in ['!freq']:
         msg = freq()
     elif cmd in ["!tarot"]:
-        msg = tarot()
+        msg = tarot(username)
     else:
         return
     slack_post_message(sc, channel_id, msg)
+
+def tarot2(user, target):
+    card = random.choice(tarot_cards)
+    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
+    msg += "image: {}\n".format(card["url"])
+    if target in ["love","戀愛"]:
+        msg += "{}\n".format(card["love"].encode('utf-8'))
+    elif target in ["work","工作"]:
+        msg += "{}\n".format(card["work"].encode('utf-8'))
+    elif target in ["health","健康"]:
+        msg += "{}\n".format(card["health"].encode('utf-8'))
+    elif target in ["joy","娛樂"]:
+        msg += "{}\n".format(card["joy"].encode('utf-8'))
+    elif target in ["money","財富"]:
+        msg += "{}\n".format(card["money"].encode('utf-8'))
+    msg += "總結：{}".format(card["conclusion"].encode('utf-8'))
+    return msg
 
 def touch(user, target):
     msg = u"@{} 碰ㄌ一下 @{} 沒想到就死去了".format(user, target).encode('utf-8')
@@ -126,6 +136,8 @@ def cmd_2(cmd, target, channel_id, username, sc):
         msg = friend(username, target)
     elif cmd in ["!yfriend"]:
         msg = yfriend(username, target)
+    elif cmd in ["!tarot"]:
+        msg = tarot2(username, target)
     else:
         return
     slack_post_message(sc, channel_id, msg)
@@ -164,7 +176,7 @@ def process_message(data):
     user_id = get_user_id(data)
     if not user_id:
         return
-    user = get_username_from_id(user_id)
+    user = get_username(user_id)
     print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
     msgs = data['text'].split(" ")
