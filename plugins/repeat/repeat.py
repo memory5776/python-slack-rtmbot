@@ -77,7 +77,7 @@ def tarot2(user, target):
     card = random.choice(tarot_cards)
     msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
     msg += "image: {}\n".format(card["url"])
-	msg += u"@{} 的".format(user).encode('utf-8')
+    msg += u"@{} 的".format(user).encode('utf-8')
     if target in ["love","愛情"]:
         msg += "愛情：{}\n".format(card["love"].encode('utf-8'))
     elif target in ["work","工作"]:
@@ -90,8 +90,8 @@ def tarot2(user, target):
         msg += "財富：{}\n".format(card["money"].encode('utf-8'))
     elif target in ["daily","今日"]:
         msg += "今日運勢：{}\n".format(card["daily"].encode('utf-8'))
-    else
-	msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
+    else:
+        msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
     return msg
 
 def touch(user, target):
