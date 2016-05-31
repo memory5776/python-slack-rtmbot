@@ -18,7 +18,8 @@ def help():
         u"!touch [user]: 碰一下 [user]",
         u"!work [user]: 逼 [user] 工作",
         u"!friend [user]: 跟 [user] 交朋友",
-        u"!tarot: 抽塔羅牌"
+        u"!tarot: 抽塔羅牌",
+		u"!dailytarot: 抽塔羅牌(每日運勢)"
     ]
     return "\n".join(msg).encode('utf-8')
 
@@ -69,6 +70,8 @@ def cmd_1(cmd, channel_id, username, sc):
         msg = freq()
     elif cmd in ["!tarot"]:
         msg = tarot(username)
+    elif cmd in ["!dailytarot"]:
+        msg = dailytarot(username)
     else:
         return
     slack_post_message(sc, channel_id, msg)
@@ -88,6 +91,13 @@ def tarot2(user, target):
     elif target in ["money","財富"]:
         msg += "{}\n".format(card["money"].encode('utf-8'))
     msg += "總結：{}".format(card["conclusion"].encode('utf-8'))
+    return msg
+
+def dailytarot(user):
+    card = random.choice(tarot_cards)
+    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
+    msg += "image: {}\n".format(card["url"])
+    msg += u"@{} 的今日運勢：\n{}".format(user, card["dailytarot"].encode('utf-8'))
     return msg
 
 def touch(user, target):
