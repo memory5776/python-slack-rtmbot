@@ -97,7 +97,7 @@ def dailytarot(user):
     card = random.choice(tarot_cards)
     msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
     msg += "image: {}\n".format(card["url"])
-    msg += u"@{} 的今日運勢：\n{}".format(user, card["dailytarot"].encode('utf-8'))
+    msg += u"@{} 的今日運勢：\n{}".format(user, card["daily"].encode('utf-8'))
     return msg
 
 def touch(user, target):
