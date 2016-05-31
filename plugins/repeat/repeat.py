@@ -69,8 +69,6 @@ def cmd_1(cmd, channel_id, username, sc):
         msg = freq()
     elif cmd in ["!tarot"]:
         msg = tarot(username)
-    elif cmd in ["!dailytarot"]:
-        msg = dailytarot(username)
     else:
         return
     slack_post_message(sc, channel_id, msg)
