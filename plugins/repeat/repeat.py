@@ -18,8 +18,7 @@ def help():
         u"!touch [user]: 碰一下 [user]",
         u"!work [user]: 逼 [user] 工作",
         u"!friend [user]: 跟 [user] 交朋友",
-        u"!tarot: 抽塔羅牌",
-		u"!dailytarot: 抽塔羅牌(每日運勢)"
+        u"!tarot: 抽塔羅牌"
     ]
     return "\n".join(msg).encode('utf-8')
 
@@ -56,7 +55,7 @@ def freq():
     return "\n".join(msg)
 
 def tarot(user):
-    msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy)".format(user).encode('utf-8')
+    msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
     return msg
 
 
@@ -80,24 +79,21 @@ def tarot2(user, target):
     card = random.choice(tarot_cards)
     msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
     msg += "image: {}\n".format(card["url"])
-    if target in ["love","戀愛"]:
-        msg += "{}\n".format(card["love"].encode('utf-8'))
+	msg += u"@{} 的".format(user).encode('utf-8')
+    if target in ["love","愛情"]:
+        msg += "愛情：{}\n".format(card["love"].encode('utf-8'))
     elif target in ["work","工作"]:
-        msg += "{}\n".format(card["work"].encode('utf-8'))
+        msg += "工作：{}\n".format(card["work"].encode('utf-8'))
     elif target in ["health","健康"]:
-        msg += "{}\n".format(card["health"].encode('utf-8'))
+        msg += "健康：{}\n".format(card["health"].encode('utf-8'))
     elif target in ["joy","娛樂"]:
-        msg += "{}\n".format(card["joy"].encode('utf-8'))
+        msg += "娛樂：{}\n".format(card["joy"].encode('utf-8'))
     elif target in ["money","財富"]:
-        msg += "{}\n".format(card["money"].encode('utf-8'))
-    msg += "總結：{}".format(card["conclusion"].encode('utf-8'))
-    return msg
-
-def dailytarot(user):
-    card = random.choice(tarot_cards)
-    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
-    msg += "image: {}\n".format(card["url"])
-    msg += u"@{} 的今日運勢：\n{}".format(user, card["daily"].encode('utf-8'))
+        msg += "財富：{}\n".format(card["money"].encode('utf-8'))
+    elif target in ["daily","今日"]:
+        msg += "今日運勢：{}\n".format(card["daily"].encode('utf-8'))
+    else
+	msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
     return msg
 
 def touch(user, target):
