@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 crontable = []
+crontable.append([60*60, "drop_item"])
 outputs = []
 from slack_util import get_username, get_channelname, get_client
 import sqlite3
@@ -9,6 +10,33 @@ import random
 friend_await = {}
 friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
+channel_map = {"general": "C0J4UTXL0"}
+
+def get_active_users(channel_name):
+    active_users = []
+    sc = get_client()
+    r = sc.api_call("channels.info", channel=channel_map[channel_name])
+    if r["ok"] == True:
+        members = r["channel"]["members"]
+        for user in members:
+            r2 = sc.api_call("users.getPresence", user=user)
+            if r2["ok"] == True:
+                if r2["presence"] == "away":
+                    pass
+                elif r2["presence"] == "active":
+                    active_users.append(user)
+    return active_users
+
+def drop_item():
+    sc = get_client()
+    active_users = get_active_users("general")
+    if len(active_users) == 0:
+        return
+    #lucky_user = random.choice(active_users)
+    users = ["@" + get_username(user) for user in active_users]
+    usernames = ", ".join(users)
+
+    slack_post_message(sc, "bot-dev-test", u"以下幸運兒獲得了 5 塊金幣！\n {}".format(usernames).encode('utf-8'))
 
 def slack_post_message(sc, channel, text, username='schubot', icon_emoji=':rabbit:'):
     sc.api_call("chat.postMessage", channel=channel, text=text, username=username, icon_emoji=icon_emoji)
