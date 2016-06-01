@@ -2,7 +2,7 @@
 crontable = []
 crontable.append([60*60, "drop_item"])
 outputs = []
-from slack_util import get_username, get_channelname, get_client
+from slack_util import Slack
 import sqlite3
 from pprint import pprint
 import json
@@ -12,14 +12,13 @@ friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 
-def get_active_users(channel_name):
+def get_active_users(slack, channel_name):
     active_users = []
-    sc = get_client()
-    r = sc.api_call("channels.info", channel=channel_map[channel_name])
+    r = slack.sc.api_call("channels.info", channel=channel_map[channel_name])
     if r["ok"] == True:
         members = r["channel"]["members"]
         for user in members:
-            r2 = sc.api_call("users.getPresence", user=user)
+            r2 = slack.sc.api_call("users.getPresence", user=user)
             if r2["ok"] == True:
                 if r2["presence"] == "away":
                     pass
@@ -28,18 +27,16 @@ def get_active_users(channel_name):
     return active_users
 
 def drop_item():
-    sc = get_client()
-    active_users = get_active_users("general")
+    slack = Slack()
+    active_users = get_active_users(slack, "general")
     if len(active_users) == 0:
         return
     #lucky_user = random.choice(active_users)
-    users = ["@" + get_username(user) for user in active_users]
+    users = ["@" + slack.get_username(user) for user in active_users]
     usernames = ", ".join(users)
 
-    slack_post_message(sc, "bot-dev-test", u"以下幸運兒獲得了 5 塊金幣！\n {}".format(usernames).encode('utf-8'))
+    slack.post_message("bot-dev-test", u"以下幸運兒獲得了 5 塊金幣！\n {}".format(usernames).encode('utf-8'))
 
-def slack_post_message(sc, channel, text, username='schubot', icon_emoji=':rabbit:'):
-    sc.api_call("chat.postMessage", channel=channel, text=text, username=username, icon_emoji=icon_emoji)
 
 def help():
     msg = [
@@ -88,7 +85,7 @@ def tarot(user):
 
 
 #TODO: unify cmd_1 and cmd_2 by **kwargs
-def cmd_1(cmd, channel_id, username, sc):
+def cmd_1(cmd, channel_id, username, slack):
     if cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
         msg = help()
     elif cmd in ['!flist']:
@@ -99,7 +96,7 @@ def cmd_1(cmd, channel_id, username, sc):
         msg = tarot(username)
     else:
         return
-    slack_post_message(sc, channel_id, msg)
+    slack.post_message(channel_id, msg)
 
 def tarot2(user, target):
     card = random.choice(tarot_cards)
@@ -159,7 +156,7 @@ def yfriend(user, target):
         msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
-def cmd_2(cmd, target, channel_id, username, sc):
+def cmd_2(cmd, target, channel_id, username, slack):
     if cmd == u'!touch':
         msg = touch(username, target)
     elif cmd in ["!work", u"!工作"]:
@@ -172,7 +169,7 @@ def cmd_2(cmd, target, channel_id, username, sc):
         msg = tarot2(username, target)
     else:
         return
-    slack_post_message(sc, channel_id, msg)
+    slack.post_message(channel_id, msg)
 
 def update_freq(text, user):
     conn = sqlite3.connect('example.db')
@@ -203,23 +200,24 @@ def get_user_id(data):
 
 def process_message(data):
     #pprint(data)
+    slack = Slack()
     channel_id = data['channel']
-    channelname = get_channelname(channel_id)
+    channelname = slack.get_channelname(channel_id)
     user_id = get_user_id(data)
     if not user_id:
         return
-    user = get_username(user_id)
+    user = slack.get_username(user_id)
     print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
     msgs = data['text'].split(" ")
-    sc = get_client()
+
     if len(msgs) == 2:
         cmd = msgs[0]
         target = msgs[1]
-        cmd_2(cmd, target, channel_id, user, sc)
+        cmd_2(cmd, target, channel_id, user, slack)
     else:
         cmd = msgs[0]
-        cmd_1(cmd, channel_id, user, sc)
+        cmd_1(cmd, channel_id, user, slack)
 
     update_freq(data['text'], user)
 
