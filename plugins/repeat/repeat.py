@@ -1,16 +1,71 @@
 # -*- coding: utf-8 -*-
 crontable = []
-crontable.append([60*60, "drop_item"])
+#crontable.append([60*60, "drop_item"])
 outputs = []
 from slack_util import Slack
 import sqlite3
 from pprint import pprint
 import json
 import random
+import csv
 friend_await = {}
 friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
+database = "example.db"
+
+class PokemonGame(object):
+    race_map = {}
+    def __init__(self):
+        with open('pokemon_race.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for i, row in enumerate(reader):
+                self.race_map[int(row["id"])] = {
+                    "zh_name": row["zh_name"],
+                    "jap_name": row["jap_name"],
+                    "eng_name": row["eng_name"],
+                    "attr1": int(row["attr1"]),
+                    "attr2": int(row["attr2"]) if row["attr2"] != '' else None,
+                    "hp": int(row["hp"]),
+                    "atk": int(row["atk"]),
+                    "def": int(row["def"]),
+                    "satk": int(row["satk"]),
+                    "sdef": int(row["sdef"]),
+                    "spd": int(row["spd"]),
+                }
+
+pg = PokemonGame()
+
+class Pokemon(object):
+    def __init__(self):
+        self.race = random.randrange(1, 252)
+        self.level = 1
+        self.zh_name = pg.race_map[self.race]["zh_name"]
+        self.jap_name = pg.race_map[self.race]["jap_name"]
+        self.eng_name = pg.race_map[self.race]["eng_name"]
+        self.attr1 = pg.race_map[self.race]["attr1"]
+        self.attr2 = pg.race_map[self.race]["attr2"]
+        self.race_value = {
+            "hp": pg.race_map[self.race]["hp"],
+            "atk": pg.race_map[self.race]["atk"],
+            "def": pg.race_map[self.race]["def"],
+            "satk": pg.race_map[self.race]["satk"],
+            "sdef": pg.race_map[self.race]["sdef"],
+            "spd": pg.race_map[self.race]["spd"],
+        }
+        self.individual_value = {
+            "hp": random.randrange(0, 32),
+            "atk": random.randrange(0, 32),
+            "def": random.randrange(0, 32),
+            "satk": random.randrange(0, 32),
+            "sdef": random.randrange(0, 32),
+            "spd": random.randrange(0, 32),
+        }
+        print(u"抽到了{}".encode('utf-8').format(self.zh_name))
+        pprint(self.race_value)
+        pprint(self.individual_value)
+
+p = Pokemon()
 
 def get_active_users(slack, channel_name):
     active_users = []
@@ -48,7 +103,7 @@ def help():
     return "\n".join(msg).encode('utf-8')
 
 def flist():
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('''create table if not exists friends (id INTEGER PRIMARY KEY AUTOINCREMENT, user_a TEXT, user_b TEXT, UNIQUE (user_a, user_b) ON CONFLICT IGNORE)''')
     c.execute('''select user_a, user_b from friends''')
@@ -62,7 +117,7 @@ def flist():
     return "\n".join(msg)
 
 def freq():
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('''SELECT * from chat_freq order by count desc''')
     result = c.fetchall()
@@ -141,7 +196,7 @@ def friend(user, target):
 def yfriend(user, target):
     if target in friend_await:
         if user in friend_await[target]:
-            conn = sqlite3.connect('example.db')
+            conn = sqlite3.connect(database)
             c = conn.cursor()
             msg = u"@{} 接受了 @{} 的好友邀請，現在他們是好碰友".format(user, target)
             #friend_sets.append(set([user, target]))
@@ -172,7 +227,7 @@ def cmd_2(cmd, target, channel_id, username, slack):
     slack.post_message(channel_id, msg)
 
 def update_freq(text, user):
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect(database)
     c = conn.cursor()
     if text.startswith('!'):
         freq_table = 'cmd_freq'
