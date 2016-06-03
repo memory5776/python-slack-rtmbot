@@ -40,12 +40,14 @@ class Pokemon(object):
     def __init__(self):
         self.race = random.randrange(1, 252)
         self.level = 1
+        self.exp = 0
         self.zh_name = pg.race_map[self.race]["zh_name"]
         self.jap_name = pg.race_map[self.race]["jap_name"]
         self.eng_name = pg.race_map[self.race]["eng_name"]
         self.attr1 = pg.race_map[self.race]["attr1"]
         self.attr2 = pg.race_map[self.race]["attr2"]
-        self.race_value = {
+        # race value
+        self.r_value = {
             "hp": pg.race_map[self.race]["hp"],
             "atk": pg.race_map[self.race]["atk"],
             "def": pg.race_map[self.race]["def"],
@@ -53,7 +55,8 @@ class Pokemon(object):
             "sdef": pg.race_map[self.race]["sdef"],
             "spd": pg.race_map[self.race]["spd"],
         }
-        self.individual_value = {
+        # individual value
+        self.i_value = {
             "hp": random.randrange(0, 32),
             "atk": random.randrange(0, 32),
             "def": random.randrange(0, 32),
@@ -61,11 +64,7 @@ class Pokemon(object):
             "sdef": random.randrange(0, 32),
             "spd": random.randrange(0, 32),
         }
-        print(u"抽到了{}".encode('utf-8').format(self.zh_name))
-        pprint(self.race_value)
-        pprint(self.individual_value)
 
-p = Pokemon()
 
 def get_active_users(slack, channel_name):
     active_users = []
@@ -80,6 +79,12 @@ def get_active_users(slack, channel_name):
                 elif r2["presence"] == "active":
                     active_users.append(user)
     return active_users
+
+def get_pokemon(user):
+    p = Pokemon()
+    bot_icon = ":" + str(p.race).zfill(3) + ":"
+    msg = u"@{} 使用 China Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n但馬上就跑了。".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    return bot_icon, msg
 
 def drop_item():
     slack = Slack()
@@ -141,6 +146,7 @@ def tarot(user):
 
 #TODO: unify cmd_1 and cmd_2 by **kwargs
 def cmd_1(cmd, channel_id, username, slack):
+    bot_icon = None
     if cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
         msg = help()
     elif cmd in ['!flist']:
@@ -149,9 +155,11 @@ def cmd_1(cmd, channel_id, username, slack):
         msg = freq()
     elif cmd in ["!tarot"]:
         msg = tarot(username)
+    elif cmd in ["!pokemon"]:
+        bot_icon, msg = get_pokemon(username)
     else:
         return
-    slack.post_message(channel_id, msg)
+    slack.post_message(channel_id, msg, bot_icon)
 
 def tarot2(user, target):
     card = random.choice(tarot_cards)
@@ -212,6 +220,7 @@ def yfriend(user, target):
     return msg
 
 def cmd_2(cmd, target, channel_id, username, slack):
+    bot_icon = None
     if cmd == u'!touch':
         msg = touch(username, target)
     elif cmd in ["!work", u"!工作"]:
@@ -224,7 +233,7 @@ def cmd_2(cmd, target, channel_id, username, slack):
         msg = tarot2(username, target)
     else:
         return
-    slack.post_message(channel_id, msg)
+    slack.post_message(channel_id, msg, bot_icon)
 
 def update_freq(text, user):
     conn = sqlite3.connect(database)

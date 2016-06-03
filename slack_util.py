@@ -8,7 +8,9 @@ class Slack(object):
         token = config.get('SLACK_TOKEN')
         self.sc = SlackClient(token)
 
-    def post_message(self, channel, text, username='schubot', icon_emoji=':rabbit:'):
+    def post_message(self, channel, text, icon_emoji, username='schubot'):
+        if icon_emoji == None:
+            icon_emoji = ':rabbit:'
         self.sc.api_call("chat.postMessage", channel=channel, text=text, username=username, icon_emoji=icon_emoji)
 
     def get_channelname(self, channel_id):
