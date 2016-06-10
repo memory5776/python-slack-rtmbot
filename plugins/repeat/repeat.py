@@ -14,6 +14,8 @@ tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
 
+orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
+
 class PokemonData(object):
     race_map = {}
     def __init__(self):
@@ -37,8 +39,11 @@ class PokemonData(object):
 pd = PokemonData()
 
 class Pokemon(object):
-    def __init__(self):
-        self.race = random.randrange(1, 252)
+    def __init__(self, race=0):
+        if race == 0:
+            self.race = random.randrange(1, 252)
+        else:
+            self.race = race
         self.level = 1
         self.exp = 0
         self.zh_name = pd.race_map[self.race]["zh_name"]
@@ -81,9 +86,15 @@ def get_active_users(slack, channel_name):
     return active_users
 
 def get_pokemon(user):
-    p = Pokemon()
+    if user != "orinpix":
+        p = Pokemon()
+    else:
+        p = Pokemon(random.choice(orinpix_pokemon_candidate))
     bot_icon = ":" + str(p.race).zfill(3) + ":"
-    msg = u"@{} 使用 China Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n但馬上就跑了。".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    if user != "orinpix":
+        msg = u"@{} 使用 China Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n但馬上就跑了。".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    else:
+        msg = u"@{} 使用 Golden Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
     return bot_icon, msg
 
 def drop_item():
