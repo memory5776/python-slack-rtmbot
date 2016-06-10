@@ -14,7 +14,7 @@ tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
 
-class PokemonGame(object):
+class PokemonData(object):
     race_map = {}
     def __init__(self):
         with open('pokemon_race.csv') as csvfile:
@@ -34,26 +34,26 @@ class PokemonGame(object):
                     "spd": int(row["spd"]),
                 }
 
-pg = PokemonGame()
+pd = PokemonData()
 
 class Pokemon(object):
     def __init__(self):
         self.race = random.randrange(1, 252)
         self.level = 1
         self.exp = 0
-        self.zh_name = pg.race_map[self.race]["zh_name"]
-        self.jap_name = pg.race_map[self.race]["jap_name"]
-        self.eng_name = pg.race_map[self.race]["eng_name"]
-        self.attr1 = pg.race_map[self.race]["attr1"]
-        self.attr2 = pg.race_map[self.race]["attr2"]
+        self.zh_name = pd.race_map[self.race]["zh_name"]
+        self.jap_name = pd.race_map[self.race]["jap_name"]
+        self.eng_name = pd.race_map[self.race]["eng_name"]
+        self.attr1 = pd.race_map[self.race]["attr1"]
+        self.attr2 = pd.race_map[self.race]["attr2"]
         # race value
         self.r_value = {
-            "hp": pg.race_map[self.race]["hp"],
-            "atk": pg.race_map[self.race]["atk"],
-            "def": pg.race_map[self.race]["def"],
-            "satk": pg.race_map[self.race]["satk"],
-            "sdef": pg.race_map[self.race]["sdef"],
-            "spd": pg.race_map[self.race]["spd"],
+            "hp": pd.race_map[self.race]["hp"],
+            "atk": pd.race_map[self.race]["atk"],
+            "def": pd.race_map[self.race]["def"],
+            "satk": pd.race_map[self.race]["satk"],
+            "sdef": pd.race_map[self.race]["sdef"],
+            "spd": pd.race_map[self.race]["spd"],
         }
         # individual value
         self.i_value = {
