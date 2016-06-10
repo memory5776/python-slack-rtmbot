@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 crontable = []
-#crontable.append([60*60, "drop_item"])
+crontable.append([60*60, "drop_coin"])
 outputs = []
 from slack_util import Slack
 import sqlite3
@@ -15,6 +15,7 @@ channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
 
 orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
+COIN_NEED_POKEMON = 5
 
 class PokemonData(object):
     race_map = {}
@@ -70,6 +71,28 @@ class Pokemon(object):
             "spd": random.randrange(0, 32),
         }
 
+        self.cur_value = {
+            "hp": self.update_status('hp'), # max hp
+            "atk": self.update_status('atk'),
+            "def": self.update_status('def'),
+            "satk": self.update_status('satk'),
+            "sdef": self.update_status('sdef'),
+            "spd": self.update_status('spd'),
+        }
+        self.cur_hp = self.cur_value['hp']
+
+    def update_status(self, ability):
+        if ability == 'hp':
+            return (self.i_value[ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + self.level + 10
+        else:
+            return (self.i_value[ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + 5
+
+def get_all_users(slack, channel_name):
+    all_users = []
+    r = slack.sc.api_call("channels.info", channel=channel_map[channel_name])
+    if r["ok"] == True:
+        all_users = r["channel"]["members"]
+    return all_users
 
 def get_active_users(slack, channel_name):
     active_users = []
@@ -85,29 +108,76 @@ def get_active_users(slack, channel_name):
                     active_users.append(user)
     return active_users
 
-def get_pokemon(user):
-    if user != "orinpix":
-        p = Pokemon()
-    else:
+def get_pokemon(user, channel_id):
+    slack = Slack()
+    if user == 'orinpix':
         p = Pokemon(random.choice(orinpix_pokemon_candidate))
+        bot_icon = ":" + str(p.race).zfill(3) + ":"
+        msg = u"@{} 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, p.zh_name)
+        return bot_icon, msg
+
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''SELECT coins FROM coins WHERE user = \'{}\';'''.format(user))
+    result = c.fetchall()
+    if result[0][0] < COIN_NEED_POKEMON:
+        slack.post_message(channel_id, u"@{} 沒錢能轉蛋了！".format(user).encode('utf-8'), None)
+        return
+
+    print('deduce money by 5')
+    c.execute('''UPDATE coins SET coins = coins - {} WHERE user = \'{}\';'''.format(COIN_NEED_POKEMON, user))
+    # gacha!
+    p = Pokemon()
+    print('get pokemon #{}'.format(p.race))
     bot_icon = ":" + str(p.race).zfill(3) + ":"
-    if user != "orinpix":
-        msg = u"@{} 使用 China Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n但馬上就跑了。".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
-    else:
-        msg = u"@{} 使用 Golden Ball 抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})\n".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    msg = u"@{} 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+
+    print('start writing DB')
+    # write DB
+    c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
+    c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
+    conn.commit()
+    conn.close()
+    print('write DB done')
     return bot_icon, msg
 
-def drop_item():
+def _drop_coin_target_users():
     slack = Slack()
-    active_users = get_active_users(slack, "general")
-    if len(active_users) == 0:
+    # all active users
+    #users = get_active_users(slack, "general")
+    # lucky user from active
+    #users = random.choice(active_users)
+    users = get_all_users(slack, "general")
+    return users
+
+def drop_coin():
+    drop_amount = 1
+    target_users = _drop_coin_target_users()
+    if len(target_users) == 0:
         return
-    #lucky_user = random.choice(active_users)
-    users = ["@" + slack.get_username(user) for user in active_users]
-    usernames = ", ".join(users)
+    slack = Slack()
+    usernames = [slack.get_username(user) for user in target_users]
+    usernames_at = ["@" + slack.get_username(user) for user in target_users]
 
-    slack.post_message("bot-dev-test", u"以下幸運兒獲得了 5 塊金幣！\n {}".format(usernames).encode('utf-8'))
+    #slack.post_message("bot-dev-test", u"以下幸運兒獲得了 {} 塊金幣！\n {}".format(drop_amount, ", ".join(usernames_at)).encode('utf-8'), None)
+    slack.post_message("bot-dev-test", u"所有人獲得了 {} 塊金幣！".format(drop_amount), None)
 
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
+    for user in usernames:
+        c.execute('''INSERT OR REPLACE INTO coins (user, coins)
+                     VALUES ( \'{}\', COALESCE((SELECT coins FROM coins WHERE user = \'{}\'), 0)
+                     );'''.format(user, user))
+        c.execute('''UPDATE coins SET coins = coins + {} WHERE user = \'{}\';'''.format(drop_amount, user))
+    conn.commit()
+    c.execute('''SELECT user, coins FROM coins ORDER BY coins DESC''')
+    result = c.fetchall()
+    msg = []
+    for row in result[:5]:
+        msg.append("{}: {}".format(row[0], row[1]))
+    slack.post_message("bot-dev-test", u"coin 排行：\n {}".format("\n".join(msg)).encode('utf-8'), None)
+    conn.close()
 
 def help():
     msg = [
@@ -167,7 +237,7 @@ def cmd_1(cmd, channel_id, username, slack):
     elif cmd in ["!tarot"]:
         msg = tarot(username)
     elif cmd in ["!pokemon"]:
-        bot_icon, msg = get_pokemon(username)
+        bot_icon, msg = get_pokemon(username, channel_id)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
