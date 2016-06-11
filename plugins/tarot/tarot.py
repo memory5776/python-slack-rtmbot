@@ -88,7 +88,6 @@ def process_message(data):
     if not user_id:
         return
     user = slack.get_username(user_id)
-    print("[tarot] msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
     msgs = data['text'].split(" ")
 
