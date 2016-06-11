@@ -10,7 +10,6 @@ import random
 import csv
 friend_await = {}
 friend_sets = []
-tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
 
@@ -89,7 +88,12 @@ class Pokemon(object):
 
 def get_all_users(slack, channel_name):
     all_users = []
-    r = slack.sc.api_call("channels.info", channel=channel_map[channel_name])
+    try:
+        r = slack.sc.api_call("channels.info", channel=channel_map[channel_name])
+    except Exception, e:
+        import traceback
+        traceback.print_exc()
+        print "Couldn't do it: %s" % e
     if r["ok"] == True:
         all_users = r["channel"]["members"]
     return all_users
@@ -121,8 +125,7 @@ def get_pokemon(user, channel_id):
     c.execute('''SELECT coins FROM coins WHERE user = \'{}\';'''.format(user))
     result = c.fetchall()
     if result[0][0] < COIN_NEED_POKEMON:
-        slack.post_message(channel_id, u"@{} 沒錢能轉蛋了！".format(user).encode('utf-8'), None)
-        return
+        return ":rabbit:", u"@{} 沒錢能轉蛋了！".format(user).encode('utf-8')
 
     print('deduce money by 5')
     c.execute('''UPDATE coins SET coins = coins - {} WHERE user = \'{}\';'''.format(COIN_NEED_POKEMON, user))
@@ -220,10 +223,27 @@ def freq():
         msg.append("{}: {}".format(row[0], row[1]))
     return "\n".join(msg)
 
-def tarot(user):
-    msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
-    return msg
+def pokemons(user):
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
+    result = c.fetchall()
+    msg = []
+    for pokemon in result:
+        race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = pokemon
+        msg.append(u":{}:".format(race).encode('utf-8'))
+    conn.close()
+    return " ".join(msg)
 
+def coins(user):
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''SELECT coins FROM coins WHERE user = \"{}\"'''.format(user))
+    result = c.fetchall()[0]
+    coins = result[0]
+    msg = u"@{} 有 {} 個金幣。".format(user, coins).encode('utf-8')
+    conn.close()
+    return msg
 
 #TODO: unify cmd_1 and cmd_2 by **kwargs
 def cmd_1(cmd, channel_id, username, slack):
@@ -234,34 +254,15 @@ def cmd_1(cmd, channel_id, username, slack):
         msg = flist()
     elif cmd in ['!freq']:
         msg = freq()
-    elif cmd in ["!tarot"]:
-        msg = tarot(username)
     elif cmd in ["!pokemon"]:
         bot_icon, msg = get_pokemon(username, channel_id)
+    elif cmd in ["!pokemons"]:
+        msg = pokemons(username)
+    elif cmd in ["!coins"]:
+        msg = coins(username)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
-
-def tarot2(user, target):
-    card = random.choice(tarot_cards)
-    msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
-    msg += "image: {}\n".format(card["url"])
-    msg += u"@{} 的".format(user).encode('utf-8')
-    if target in ["love","愛情"]:
-        msg += "愛情：{}\n".format(card["love"].encode('utf-8'))
-    elif target in ["work","工作"]:
-        msg += "工作：{}\n".format(card["work"].encode('utf-8'))
-    elif target in ["health","健康"]:
-        msg += "健康：{}\n".format(card["health"].encode('utf-8'))
-    elif target in ["joy","娛樂"]:
-        msg += "娛樂：{}\n".format(card["joy"].encode('utf-8'))
-    elif target in ["money","財富"]:
-        msg += "財富：{}\n".format(card["money"].encode('utf-8'))
-    elif target in ["daily","今日"]:
-        msg += "今日運勢：{}\n".format(card["daily"].encode('utf-8'))
-    else:
-        msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
-    return msg
 
 def touch(user, target):
     msg = u"@{} 碰ㄌ一下 @{} 沒想到就死去了".format(user, target).encode('utf-8')
@@ -310,8 +311,6 @@ def cmd_2(cmd, target, channel_id, username, slack):
         msg = friend(username, target)
     elif cmd in ["!yfriend"]:
         msg = yfriend(username, target)
-    elif cmd in ["!tarot"]:
-        msg = tarot2(username, target)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)

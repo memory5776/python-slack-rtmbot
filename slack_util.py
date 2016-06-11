@@ -16,7 +16,7 @@ class Slack(object):
     def get_channelname(self, channel_id):
         channel_info = self.sc.api_call("channels.info", channel=channel_id)
         if channel_info['ok'] == False:
-            print channel_info
+            print("cannot resolve channel name".format(channel_info['error']))
             return 'N/A'
         channelname = channel_info['channel']['name']
         return channelname
