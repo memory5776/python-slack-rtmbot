@@ -2,6 +2,7 @@
 crontable = []
 outputs = []
 from slack_util import Slack
+#from plugins.general.general import update_freq
 import sqlite3
 from pprint import pprint
 import json
@@ -87,7 +88,7 @@ def process_message(data):
     if not user_id:
         return
     user = slack.get_username(user_id)
-    print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
+    print("[tarot] msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
     msgs = data['text'].split(" ")
 

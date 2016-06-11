@@ -222,7 +222,6 @@ def get_user_id(data):
         return None
 
 def process_message(data):
-    #pprint(data)
     slack = Slack()
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
@@ -230,7 +229,7 @@ def process_message(data):
     if not user_id:
         return
     user = slack.get_username(user_id)
-    print("msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
+    print("[general] msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
     msgs = data['text'].split(" ")
 
