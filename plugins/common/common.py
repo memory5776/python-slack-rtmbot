@@ -55,7 +55,7 @@ def drop_coin():
         return
     slack = Slack()
     usernames = [slack.get_username(user) for user in target_users]
-    usernames_at = ["@" + slack.get_username(user) for user in target_users]
+    usernames_at = ["@" + username for username in usernames]
 
     #slack.post_message("bot-dev-test", u"以下幸運兒獲得了 {} 塊金幣！\n {}".format(drop_amount, ", ".join(usernames_at)).encode('utf-8'), None)
     slack.post_message("bot-dev-test", u"所有人獲得了 {} 塊金幣！".format(drop_amount), None)
