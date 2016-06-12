@@ -79,8 +79,6 @@ def drop_coin():
 
 def help():
     msg = [
-        u"!touch [user]: 碰一下 [user]",
-        u"!work [user]: 逼 [user] 工作",
         u"!friend [user]: 跟 [user] 交朋友",
         u"!tarot: 抽塔羅牌"
     ]
@@ -143,14 +141,6 @@ def cmd_1(cmd, channel_id, username, slack):
         return
     slack.post_message(channel_id, msg, bot_icon)
 
-def touch(user, target):
-    msg = u"@{} 碰ㄌ一下 @{} 沒想到就死去了".format(user, target).encode('utf-8')
-    return msg
-
-def work(user, target):
-    msg = u"@{} 在 @{} 的監督下辛勤地工作".format(target, user).encode('utf-8')
-    return msg
-
 def friend(user, target):
     global friend_await
     if user not in friend_await:
@@ -182,11 +172,7 @@ def yfriend(user, target):
 
 def cmd_2(cmd, target, channel_id, username, slack):
     bot_icon = None
-    if cmd == u'!touch':
-        msg = touch(username, target)
-    elif cmd in ["!work", u"!工作"]:
-        msg = work(username, target)
-    elif cmd in ["!friend"]:
+    if cmd in ["!friend"]:
         msg = friend(username, target)
     elif cmd in ["!yfriend"]:
         msg = yfriend(username, target)
