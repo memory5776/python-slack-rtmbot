@@ -18,6 +18,6 @@
     "clap": "@{} 激動地鼓掌。",
     "drink": "@{} 開始喝東西。",
     "下班": "@{} 下班了。",
-    "help": "!friend [user]: 跟 [user] 交朋友\n!tarot: 抽塔羅牌"
+    "help": "!friend [user]: 跟 [user] 交朋友\n!tarot: 抽塔羅牌\n!fight [user] [pokemon id]: 神奇寶貝決鬥"
 }
 

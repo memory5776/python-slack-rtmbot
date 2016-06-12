@@ -16,7 +16,7 @@ database = "example.db"
 simple_unary_commands = json.load(open('simple_unary_commands.json'))
 simple_binary_commands = json.load(open('simple_binary_commands.json'))
 config = yaml.load(open('rtmbot.conf', 'r'))
-admin = config.get('ADMIN')
+ADMIN = config.get('ADMIN')
 
 def get_all_users(slack, channel_name):
     all_users = []
@@ -161,14 +161,30 @@ def yfriend(user, target):
         msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
-def binary_command(cmd, target, channel_id, username, slack):
+def add_coins_all(target, coins):
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
+    c.execute('''UPDATE coins SET coins = (coins + {}) ;'''.format(coins))
+    conn.commit()
+    conn.close()
+    msg = u"給所有人 {} coins！".encode('utf-8').format(coins)
+    return msg
+
+def binary_command(cmd, target, channel_id, user, slack):
     bot_icon = None
     if cmd[1:] in simple_binary_commands:
-        msg = simple_binary_commands[cmd[1:]].format(username, target).encode('utf-8')
+        msg = simple_binary_commands[cmd[1:]].format(user, target).encode('utf-8')
+    elif cmd in ["!add_coins_all"]:
+        if user == ADMIN:
+            coins = int(target)
+            msg = add_coins_all(target, coins)
+        else:
+            return
     elif cmd in ["!friend"]:
-        msg = friend(username, target)
+        msg = friend(user, target)
     elif cmd in ["!yfriend"]:
-        msg = yfriend(username, target)
+        msg = yfriend(user, target)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)

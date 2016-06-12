@@ -20,6 +20,8 @@ ADMIN = config.get('ADMIN')
 orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
 COIN_NEED_POKEMON = 5
 
+arena_standby = {}
+
 class PokemonData(object):
     race_map = {}
     def __init__(self):
@@ -128,9 +130,9 @@ def pokemons(user):
     c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
     result = c.fetchall()
     msg = []
-    for pokemon in result:
+    for i, pokemon in enumerate(result):
         race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = pokemon
-        msg.append(u":{}:".format(str(race).zfill(3)).encode('utf-8'))
+        msg.append(u"{}:{}:".format(i+1, str(race).zfill(3)).encode('utf-8'))
     conn.close()
     return " ".join(msg)
 
@@ -145,6 +147,36 @@ def pokemon_give_new(user, race):
     c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
     c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
     conn.commit()
+    conn.close()
+    return msg
+
+def _duel(team1, team2):
+    return random.choice([team1, team2])
+
+def fight(user, target, pokemon_index):
+    global arena_standby, pd
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('''SELECT id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
+    result = c.fetchall()
+    if pokemon_index > len(result):
+        msg =  u"@{} 你沒有那麼多神奇寶貝！".format(user).encode('utf-8')        
+    else:
+        picked_pokemon = result[pokemon_index -1]
+        id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = picked_pokemon
+        pokemon_name = pd.race_map[race]['zh_name']
+        if (target, user) in arena_standby:
+            msg = u"@{} 接受了 @{} 的挑戰並使用 {} 應戰！\n".format(user, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
+            team1 = (target, arena_standby[(target, user)])
+            team2 = (user, id)
+            winnner = _duel(team1, team2)
+            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winnner[1]))
+            winner_pokemon_name = pd.race_map[c.fetchall()[0][0]]['zh_name']
+            msg += u"勝利者是 @{} 與他的 {}！".format(winnner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
+            arena_standby.pop((target, user))
+        else:
+            msg = u"@{} 使用 {} 跟 @{} 提出決鬥！（從 `!pokemons` 裡面選擇一個用 `!fight` 應戰）".format(user, unicode(pokemon_name, 'utf-8'), target, user).encode('utf-8')
+            arena_standby[(user, target)] = id
     conn.close()
     return msg
 
@@ -169,11 +201,14 @@ def binary_command(cmd, target, channel_id, username, slack):
 def trinary_command(cmd, target, something, channel_id, user, slack):
     bot_icon = None
     if cmd in ['!pokemon_give_new']:
-        race = something
+        race = int(something)
         if user == ADMIN:
-            msg = pokemon_give_new(target, int(race))
+            msg = pokemon_give_new(target, race)
         else:
             return
+    elif cmd in ['!fight']:
+        pokemon_index = int(something)
+        msg = fight(user, target, pokemon_index)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
