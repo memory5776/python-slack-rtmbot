@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 crontable = []
-crontable.append([60*60, "drop_coin"])
+#crontable.append([60*60, "drop_coin"])
 outputs = []
 from slack_util import Slack
 import sqlite3

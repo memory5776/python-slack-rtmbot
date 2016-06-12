@@ -40,6 +40,10 @@ class PokemonData(object):
                     "satk": int(row["satk"]),
                     "sdef": int(row["sdef"]),
                     "spd": int(row["spd"]),
+                    "catchable": int(row["catchable"]),
+                    #"probability_type": row["probability_type"],
+                    "kill_basic_exp": int(row["kill_basic_exp"]),
+                    "level_exp_type": int(row["level_exp_type"]),
                 }
 
 pd = PokemonData()
@@ -47,7 +51,12 @@ pd = PokemonData()
 class Pokemon(object):
     def __init__(self, race=0):
         if race == 0:
-            self.race = random.randrange(1, 252)
+            catchable_race = [key for key in pd.race_map if pd.race_map[key]["catchable"] == 1]
+            #type_b = [key for key in pd.race_map if pd.race_map[key]["catchable"] == 1 and pd.race_map[key]["probability_type"] == "B"]
+            #type_c = [key for key in pd.race_map if pd.race_map[key]["catchable"] == 1 and pd.race_map[key]["probability_type"] == "C"]
+            #candidates = catchable_race + type_b + type_c + type_c
+            candidates = catchable_race
+            self.race = random.choice(candidates)
         else:
             self.race = race
         self.level = 1
@@ -161,6 +170,8 @@ def fight(user, target, pokemon_index):
     result = c.fetchall()
     if pokemon_index > len(result):
         msg =  u"@{} 你沒有那麼多神奇寶貝！".format(user).encode('utf-8')        
+    elif user == target:
+        msg =  u"@{} 你不是武藤遊戲，無法跟自己決鬥。".format(user).encode('utf-8')
     else:
         picked_pokemon = result[pokemon_index -1]
         id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = picked_pokemon
@@ -207,8 +218,11 @@ def trinary_command(cmd, target, something, channel_id, user, slack):
         else:
             return
     elif cmd in ['!fight']:
-        pokemon_index = int(something)
-        msg = fight(user, target, pokemon_index)
+        try:
+            pokemon_index = int(something)
+            msg = fight(user, target, pokemon_index)
+        except:
+            msg = u"@{} 請用數字指定！".format(user).encode('utf-8')
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
