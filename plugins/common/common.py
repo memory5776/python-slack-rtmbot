@@ -8,12 +8,15 @@ from pprint import pprint
 import json
 import random
 import csv
+import yaml
 friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
 simple_unary_commands = json.load(open('simple_unary_commands.json'))
 simple_binary_commands = json.load(open('simple_binary_commands.json'))
+config = yaml.load(open('rtmbot.conf', 'r'))
+admin = config.get('ADMIN')
 
 def get_all_users(slack, channel_name):
     all_users = []

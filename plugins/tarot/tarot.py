@@ -18,7 +18,7 @@ def tarot(user):
     msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
     return msg
 
-def cmd_1(cmd, channel_id, username, slack):
+def unary_command(cmd, channel_id, username, slack):
     bot_icon = None
     if cmd in ["!tarot"]:
         msg = tarot(username)
@@ -47,8 +47,7 @@ def tarot2(user, target):
         msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
     return msg
 
-
-def cmd_2(cmd, target, channel_id, username, slack):
+def binary_command(cmd, target, channel_id, username, slack):
     bot_icon = None
     if cmd in ["!tarot"]:
         msg = tarot2(username, target)
@@ -89,15 +88,15 @@ def process_message(data):
         return
     user = slack.get_username(user_id)
 
-    msgs = data['text'].split(" ")
-
-    if len(msgs) == 2:
-        cmd = msgs[0]
-        target = msgs[1]
-        cmd_2(cmd, target, channel_id, user, slack)
-    else:
-        cmd = msgs[0]
-        cmd_1(cmd, channel_id, user, slack)
+    if data['text'].startswith("!"):
+        msgs = data['text'].split(" ")
+        if len(msgs) == 2:
+            cmd = msgs[0]
+            target = msgs[1]
+            binary_command(cmd, target, channel_id, user, slack)
+        elif len(msgs) == 1:
+            cmd = msgs[0]
+            unary_command(cmd, channel_id, user, slack)
 
     update_freq(data['text'], user)
 

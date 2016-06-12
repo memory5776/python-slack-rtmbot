@@ -8,10 +8,14 @@ from pprint import pprint
 import json
 import random
 import csv
+import yaml
 friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
+
+config = yaml.load(open('rtmbot.conf', 'r'))
+ADMIN = config.get('ADMIN')
 
 orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
 COIN_NEED_POKEMON = 5
@@ -130,8 +134,21 @@ def pokemons(user):
     conn.close()
     return " ".join(msg)
 
-#TODO: unify cmd_1 and cmd_2 by **kwargs
-def cmd_1(cmd, channel_id, username, slack):
+def pokemon_give_new(user, race):
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    p = Pokemon(race)
+    print('get pokemon #{}'.format(p.race))
+    bot_icon = ":" + str(p.race).zfill(3) + ":"
+    msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+
+    c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
+    c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
+    conn.commit()
+    conn.close()
+    return msg
+
+def unary_command(cmd, channel_id, username, slack):
     bot_icon = None
     if cmd in ["!pokemon"]:
         bot_icon, msg = get_pokemon(username, channel_id)
@@ -141,10 +158,22 @@ def cmd_1(cmd, channel_id, username, slack):
         return
     slack.post_message(channel_id, msg, bot_icon)
 
-def cmd_2(cmd, target, channel_id, username, slack):
+def binary_command(cmd, target, channel_id, username, slack):
     bot_icon = None
     if cmd in ['!anything']:
         return
+    else:
+        return
+    slack.post_message(channel_id, msg, bot_icon)
+
+def trinary_command(cmd, target, something, channel_id, user, slack):
+    bot_icon = None
+    if cmd in ['!pokemon_give_new']:
+        race = something
+        if user == ADMIN:
+            msg = pokemon_give_new(target, int(race))
+        else:
+            return
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
@@ -186,15 +215,20 @@ def process_message(data):
         return
     user = slack.get_username(user_id)
 
-    msgs = data['text'].split(" ")
-
-    if len(msgs) == 2:
-        cmd = msgs[0]
-        target = msgs[1]
-        cmd_2(cmd, target, channel_id, user, slack)
-    else:
-        cmd = msgs[0]
-        cmd_1(cmd, channel_id, user, slack)
+    if data['text'].startswith("!"):
+        msgs = data['text'].split(" ")
+        if len(msgs) == 2:
+            cmd = msgs[0]
+            target = msgs[1]
+            binary_command(cmd, target, channel_id, user, slack)
+        elif len(msgs) == 3:
+            cmd = msgs[0]
+            target = msgs[1]
+            something = msgs[2]
+            trinary_command(cmd, target, something, channel_id, user, slack)
+        elif len(msgs) == 1:
+            cmd = msgs[0]
+            unary_command(cmd, channel_id, user, slack)
 
     update_freq(data['text'], user)
 
