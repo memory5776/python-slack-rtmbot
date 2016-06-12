@@ -12,6 +12,8 @@ friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
+unary_commands = json.load(open('simple_unary_commands.json'))
+binary_commands = json.load(open('simple_binary_commands.json'))
 
 def get_all_users(slack, channel_name):
     all_users = []
