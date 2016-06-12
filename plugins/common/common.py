@@ -128,10 +128,11 @@ def coins(user):
     conn.close()
     return msg
 
-#TODO: unify cmd_1 and cmd_2 by **kwargs
-def cmd_1(cmd, channel_id, username, slack):
+def unary_command(cmd, channel_id, username, slack):
     bot_icon = None
-    if cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
+    if cmd[1:] in unary_commands:
+        msg = unary_commands[cmd[1:]].format(username).encode('utf-8')
+    elif cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
         msg = help()
     elif cmd in ['!flist']:
         msg = flist()
@@ -172,9 +173,11 @@ def yfriend(user, target):
         msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
-def cmd_2(cmd, target, channel_id, username, slack):
+def binary_command(cmd, target, channel_id, username, slack):
     bot_icon = None
-    if cmd in ["!friend"]:
+    if cmd[1:] in binary_commands:
+        msg = binary_commands[cmd[1:]].format(username, target).encode('utf-8')
+    elif cmd in ["!friend"]:
         msg = friend(username, target)
     elif cmd in ["!yfriend"]:
         msg = yfriend(username, target)
@@ -216,18 +219,19 @@ def process_message(data):
     user_id = get_user_id(data)
     if not user_id:
         return
+
     user = slack.get_username(user_id)
     print("[general] msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
 
-    msgs = data['text'].split(" ")
-
-    if len(msgs) == 2:
-        cmd = msgs[0]
-        target = msgs[1]
-        cmd_2(cmd, target, channel_id, user, slack)
-    else:
-        cmd = msgs[0]
-        cmd_1(cmd, channel_id, user, slack)
+    if data['text'].startswith("!"):
+        msgs = data['text'].split(" ")
+        if len(msgs) == 2:
+            cmd = msgs[0]
+            target = msgs[1]
+            binary_command(cmd, target, channel_id, user, slack)
+        elif len(msgs) == 1:
+            cmd = msgs[0]
+            unary_command(cmd, channel_id, user, slack)
 
     update_freq(data['text'], user)
 

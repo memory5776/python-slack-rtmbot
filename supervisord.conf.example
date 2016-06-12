@@ -1,6 +1,8 @@
 [program:python-slackbot]
 directory=/srv/python-slackbot
 command=/srv/python-slackbot/__/bin/python rtmbot.py
+stdout_logfile=/var/log/python-slackbot.out
+stderr_logfile=/var/log/python-slackbot.err
 autostart=true
 autorestart=true
 
