@@ -12,8 +12,8 @@ friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
 database = "example.db"
-unary_commands = json.load(open('simple_unary_commands.json'))
-binary_commands = json.load(open('simple_binary_commands.json'))
+simple_unary_commands = json.load(open('simple_unary_commands.json'))
+simple_binary_commands = json.load(open('simple_binary_commands.json'))
 
 def get_all_users(slack, channel_name):
     all_users = []
@@ -73,13 +73,6 @@ def drop_coin():
     conn.commit()
     conn.close()
 
-def help():
-    msg = [
-        u"!friend [user]: 跟 [user] 交朋友",
-        u"!tarot: 抽塔羅牌"
-    ]
-    return "\n".join(msg).encode('utf-8')
-
 def flist():
     conn = sqlite3.connect(database)
     c = conn.cursor()
@@ -124,10 +117,8 @@ def coins(user):
 
 def unary_command(cmd, channel_id, username, slack):
     bot_icon = None
-    if cmd[1:] in unary_commands:
-        msg = unary_commands[cmd[1:]].format(username).encode('utf-8')
-    elif cmd in ['!help', u'!朽咪教我', u'!朽瞇教我', u'!舒米教我']:
-        msg = help()
+    if cmd[1:] in simple_unary_commands:
+        msg = simple_unary_commands[cmd[1:]].format(username).encode('utf-8')
     elif cmd in ['!flist']:
         msg = flist()
     elif cmd in ['!freq']:
@@ -169,8 +160,8 @@ def yfriend(user, target):
 
 def binary_command(cmd, target, channel_id, username, slack):
     bot_icon = None
-    if cmd[1:] in binary_commands:
-        msg = binary_commands[cmd[1:]].format(username, target).encode('utf-8')
+    if cmd[1:] in simple_binary_commands:
+        msg = simple_binary_commands[cmd[1:]].format(username, target).encode('utf-8')
     elif cmd in ["!friend"]:
         msg = friend(username, target)
     elif cmd in ["!yfriend"]:
