@@ -71,12 +71,6 @@ def drop_coin():
                      );'''.format(user, user))
         c.execute('''UPDATE coins SET coins = coins + {} WHERE user = \'{}\';'''.format(drop_amount, user))
     conn.commit()
-    c.execute('''SELECT user, coins FROM coins ORDER BY coins DESC''')
-    result = c.fetchall()
-    msg = []
-    for row in result[:5]:
-        msg.append("{}: {}".format(row[0], row[1]))
-    slack.post_message("bot-dev-test", u"coin 排行：\n {}".format("\n".join(msg)).encode('utf-8'), None)
     conn.close()
 
 def help():
