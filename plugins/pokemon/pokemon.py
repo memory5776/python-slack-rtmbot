@@ -21,6 +21,8 @@ orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
 COIN_NEED_POKEMON = 5
 
 arena_standby = {}
+SKILL_LIST = json.load(open('skill_list.json'))
+SKILL_LIST = [skill.encode('utf-8') for skill in SKILL_LIST]
 
 class PokemonData(object):
     race_map = {}
@@ -40,10 +42,10 @@ class PokemonData(object):
                     "satk": int(row["satk"]),
                     "sdef": int(row["sdef"]),
                     "spd": int(row["spd"]),
-                    "catchable": int(row["catchable"]),
+                    "catchable": int(row["catchable"]) if row["catchable"] != "" else 0,
                     #"probability_type": row["probability_type"],
                     "kill_basic_exp": int(row["kill_basic_exp"]),
-                    "level_exp_type": int(row["level_exp_type"]),
+                    "level_exp_type": row["level_exp_type"],
                 }
 
 pd = PokemonData()
@@ -61,20 +63,6 @@ class Pokemon(object):
             self.race = race
         self.level = 1
         self.exp = 0
-        self.zh_name = pd.race_map[self.race]["zh_name"]
-        self.jap_name = pd.race_map[self.race]["jap_name"]
-        self.eng_name = pd.race_map[self.race]["eng_name"]
-        self.attr1 = pd.race_map[self.race]["attr1"]
-        self.attr2 = pd.race_map[self.race]["attr2"]
-        # race value
-        self.r_value = {
-            "hp": pd.race_map[self.race]["hp"],
-            "atk": pd.race_map[self.race]["atk"],
-            "def": pd.race_map[self.race]["def"],
-            "satk": pd.race_map[self.race]["satk"],
-            "sdef": pd.race_map[self.race]["sdef"],
-            "spd": pd.race_map[self.race]["spd"],
-        }
         # individual value
         self.i_value = {
             "hp": random.randrange(0, 32),
@@ -85,28 +73,48 @@ class Pokemon(object):
             "spd": random.randrange(0, 32),
         }
 
-        self.cur_value = {
-            "hp": self.update_status('hp'), # max hp
-            "atk": self.update_status('atk'),
-            "def": self.update_status('def'),
-            "satk": self.update_status('satk'),
-            "sdef": self.update_status('sdef'),
-            "spd": self.update_status('spd'),
+class SummonedPokemon(object):
+    def __init__(self, id):
+        ''' initialize an existed pokemon from database'''
+        conn = sqlite3.connect(database)
+        c = conn.cursor()
+        c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {}'''.format(id))
+        r = c.fetchall()[0]
+        conn.close()
+        self.race, self.level, self.exp = r[0:3]
+        self.i_value = {
+            "hp": r[3],
+            "atk": r[4],
+            "def": r[5],
+            "satk": r[6],
+            "sdef": r[7],
+            "spd": r[8],
         }
-        self.cur_hp = self.cur_value['hp']
+        self.c_value = {
+            "max_hp": self.get_cur_value('hp'),
+            "hp": self.get_cur_value('hp'),
+            "atk": self.get_cur_value('atk'),
+            "def": self.get_cur_value('def'),
+            "satk": self.get_cur_value('satk'),
+            "sdef": self.get_cur_value('sdef'),
+            "spd": self.get_cur_value('spd'),
+        }
 
-    def update_status(self, ability):
+    def get_cur_value(self, ability):
         if ability == 'hp':
-            return (self.i_value[ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + self.level + 10
+            value = (pd.race_map[self.race][ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + self.level + 10
+            return int(value) + 1
         else:
-            return (self.i_value[ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + 5
+            value = (pd.race_map[self.race][ability] * 2 + self.i_value[ability]) * ( self.level / 100.0) + 5
+            return int(value) + 1
 
 def get_pokemon(user, channel_id):
     slack = Slack()
     if user == 'orinpix':
         p = Pokemon(random.choice(orinpix_pokemon_candidate))
+        zh_name = pd.race_map[p.race]["zh_name"]
         bot_icon = ":" + str(p.race).zfill(3) + ":"
-        msg = u"@{} 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, p.zh_name)
+        msg = u"@{} 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, zh_name)
         return bot_icon, msg
 
     conn = sqlite3.connect(database)
@@ -122,7 +130,12 @@ def get_pokemon(user, channel_id):
     p = Pokemon()
     print('get pokemon #{}'.format(p.race))
     bot_icon = ":" + str(p.race).zfill(3) + ":"
-    msg = u"@{} 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    zh_name = pd.race_map[p.race]["zh_name"]
+    r_hp = pd.race_map[p.race]["hp"]
+    r_atk = pd.race_map[p.race]["atk"]
+    r_def = pd.race_map[p.race]["def"]
+    r_spd = pd.race_map[p.race]["spd"]
+    msg = u"@{} 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
 
     print('start writing DB')
     # write DB
@@ -149,9 +162,14 @@ def pokemon_give_new(user, race):
     conn = sqlite3.connect(database)
     c = conn.cursor()
     p = Pokemon(race)
+    zh_name = pd.race_map[p.race]["zh_name"]
+    r_hp = pd.race_map[p.race]["hp"]
+    r_atk = pd.race_map[p.race]["atk"]
+    r_def = pd.race_map[p.race]["def"]
+    r_spd = pd.race_map[p.race]["spd"]
     print('get pokemon #{}'.format(p.race))
     bot_icon = ":" + str(p.race).zfill(3) + ":"
-    msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, p.zh_name, p.r_value['hp'], p.i_value['hp'], p.r_value['atk'], p.i_value['atk'], p.r_value['def'], p.i_value['def'], p.r_value['spd'], p.i_value['spd'],)
+    msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
 
     c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
     c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
@@ -159,8 +177,47 @@ def pokemon_give_new(user, race):
     conn.close()
     return msg
 
-def _duel(team1, team2):
-    return random.choice([team1, team2])
+def _atk(sp1, sp2):
+    skill_base = 50
+    base_damage = ((2.0 * sp1.level + 10.0) / 250.0) * (sp1.c_value["atk"] * 1.0 / sp2.c_value["def"]) * skill_base + 2
+    print("((2.0 * sp1.level + 10) / 250.0) = {}, (sp1.c_value[\"atk\"] * 1.0 / sp2.c_value[\"def\"]): {}".format(((2.0 * sp1.level + 10) / 250.0), (sp1.c_value["atk"] * 1.0 / sp2.c_value["def"])))
+    is_critical = False
+    if random.random() < 0.1: # 10% change critical
+        is_critical = True
+        critical_modifier = 2
+    else:
+        is_critical = False
+        critical_modifier = 1
+    modifier = critical_modifier * (random.random() / 100 * 15 + 0.85)
+    final_damage = max(int(base_damage * modifier), 1)
+    print("base_damage: {}, modifier: {}, final_damage: {}".format(base_damage, modifier, final_damage))
+    import sys
+    sys.stdout.flush()
+    return (is_critical, final_damage)
+
+def _duel(team1, team2, msg):
+    pokemon1_id = team1[1]
+    pokemon2_id = team2[1]
+    sp1 = SummonedPokemon(pokemon1_id)
+    sp2 = SummonedPokemon(pokemon2_id)
+    pokemon1_name = pd.race_map[sp1.race]['zh_name']
+    pokemon2_name = pd.race_map[sp2.race]['zh_name']
+
+    while sp1.c_value["hp"] > 0 and sp2.c_value["hp"] > 0:
+        (is_critical, final_damage) = _atk(sp1, sp2)
+        msg += u"{} 對 {} 使出 {} 造成 {} 點{}傷害。\n{} hp: {} -> {}\n".encode('utf-8').format(pokemon1_name, pokemon2_name, random.choice(SKILL_LIST), final_damage, "暴擊" if is_critical else "", pokemon2_name, sp2.c_value["hp"], sp2.c_value["hp"] - final_damage)
+        sp2.c_value["hp"] -= final_damage
+        if sp2.c_value["hp"] <= 0:
+            msg += u"{} 死去\n".encode('utf-8').format(pokemon2_name)
+            return team1, msg
+
+        (is_critical, final_damage) = _atk(sp2, sp1)
+        msg += u"{} 對 {} 使出 {} 造成 {} 點{}傷害。\n{} hp: {} -> {}\n".encode('utf-8').format(pokemon2_name, pokemon1_name, random.choice(SKILL_LIST), final_damage, "暴擊" if is_critical else "", pokemon1_name, sp1.c_value["hp"], sp1.c_value["hp"] - final_damage)
+        sp1.c_value["hp"] -= final_damage
+        if sp1.c_value["hp"] <= 0:
+            msg += u"{} 死去\n".encode('utf-8').format(pokemon1_name)
+            return team2, msg
+    #return random.choice([team1, team2])
 
 def fight(user, target, pokemon_index):
     global arena_standby, pd
@@ -180,7 +237,7 @@ def fight(user, target, pokemon_index):
             msg = u"@{} 接受了 @{} 的挑戰並使用 {} 應戰！\n".format(user, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
             team1 = (target, arena_standby[(target, user)])
             team2 = (user, id)
-            winnner = _duel(team1, team2)
+            winnner, msg = _duel(team1, team2, msg)
             c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winnner[1]))
             winner_pokemon_name = pd.race_map[c.fetchall()[0][0]]['zh_name']
             msg += u"勝利者是 @{} 與他的 {}！".format(winnner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
@@ -221,8 +278,10 @@ def trinary_command(cmd, target, something, channel_id, user, slack):
         try:
             pokemon_index = int(something)
             msg = fight(user, target, pokemon_index)
-        except:
-            msg = u"@{} 請用數字指定！".format(user).encode('utf-8')
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+            msg = u"@{} 錯誤！{}".format(user, e).encode('utf-8')
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
