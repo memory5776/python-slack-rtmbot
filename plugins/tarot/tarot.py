@@ -12,7 +12,10 @@ friend_await = {}
 friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
-database = "example.db"
+
+SLACK_TOKEN = None
+ADMIN = ''
+database = None
 
 def tarot(user):
     msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
@@ -79,8 +82,12 @@ def get_user_id(data):
     else:
         return None
 
-def process_message(data):
-    slack = Slack()
+def process_message(data, config={}):
+    global ADMIN, database, SLACK_TOKEN
+    ADMIN = config.get('ADMIN', '')
+    database = config.get('database', None)
+    SLACK_TOKEN = config.get('SLACK_TOKEN', None)
+    slack = Slack(SLACK_TOKEN)
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
     user_id = get_user_id(data)

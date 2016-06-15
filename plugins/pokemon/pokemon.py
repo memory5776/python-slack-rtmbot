@@ -12,10 +12,10 @@ import yaml
 friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
-database = "example.db"
 
-config = yaml.load(open('rtmbot.conf', 'r'))
-ADMIN = config.get('ADMIN')
+SLACK_TOKEN = None
+ADMIN = ''
+database = None
 
 orinpix_pokemon_candidate = [25, 35, 36, 39, 40, 113, 151, 173, 174, 175, 176]
 COIN_NEED_POKEMON = 5
@@ -109,7 +109,7 @@ class SummonedPokemon(object):
             return int(value) + 1
 
 def get_pokemon(user, channel_id):
-    slack = Slack()
+    slack = Slack(SLACK_TOKEN)
     if user == 'orinpix':
         p = Pokemon(random.choice(orinpix_pokemon_candidate))
         zh_name = pd.race_map[p.race]["zh_name"]
@@ -119,9 +119,10 @@ def get_pokemon(user, channel_id):
 
     conn = sqlite3.connect(database)
     c = conn.cursor()
+    c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
     c.execute('''SELECT coins FROM coins WHERE user = \'{}\';'''.format(user))
     result = c.fetchall()
-    if result[0][0] < COIN_NEED_POKEMON:
+    if len(result) == 0 or result[0][0] < COIN_NEED_POKEMON:
         return ":rabbit:", u"@{} 沒錢能轉蛋了！".format(user).encode('utf-8')
 
     print('deduce money by 5')
@@ -149,6 +150,7 @@ def get_pokemon(user, channel_id):
 def pokemons(user):
     conn = sqlite3.connect(database)
     c = conn.cursor()
+    c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
     c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
     result = c.fetchall()
     msg = []
@@ -313,9 +315,13 @@ def get_user_id(data):
     else:
         return None
 
-def process_message(data):
+def process_message(data, config={}):
+    global ADMIN, database, SLACK_TOKEN
+    ADMIN = config.get('ADMIN', '')
+    database = config.get('database', None)
+    SLACK_TOKEN = config.get('SLACK_TOKEN', None)
     #pprint(data)
-    slack = Slack()
+    slack = Slack(SLACK_TOKEN)
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
     user_id = get_user_id(data)

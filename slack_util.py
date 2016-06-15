@@ -3,9 +3,7 @@ from slackclient import SlackClient
 import yaml
 
 class Slack(object):
-    def __init__(self):
-        config = yaml.load(open('rtmbot.conf', 'r'))
-        token = config.get('SLACK_TOKEN')
+    def __init__(self, token):
         self.sc = SlackClient(token)
 
     def post_message(self, channel, text, icon_emoji, username='schubot'):

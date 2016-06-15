@@ -148,11 +148,11 @@ class Plugin(object):
         if function_name in dir(self.module):
             if self.debug is True:
                 # this makes the plugin fail with stack trace in debug mode
-                eval("self.module." + function_name)(data)
+                eval("self.module." + function_name)(data, self.module.config)
             else:
                 # otherwise we log the exception and carry on
                 try:
-                    eval("self.module." + function_name)(data)
+                    eval("self.module." + function_name)(data, self.module.config)
                 except Exception:
                     logging.exception("problem in module {} {}".format(function_name, data))
         if "catch_all" in dir(self.module):

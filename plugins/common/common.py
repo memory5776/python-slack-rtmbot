@@ -11,12 +11,13 @@ import csv
 import yaml
 friend_await = {}
 friend_sets = []
-channel_map = {"general": "C0J4UTXL0"}
-database = "example.db"
 simple_unary_commands = json.load(open('simple_unary_commands.json'))
 simple_binary_commands = json.load(open('simple_binary_commands.json'))
-config = yaml.load(open('rtmbot.conf', 'r'))
-ADMIN = config.get('ADMIN')
+channel_map = {"general": "C0J4UTXL0"}
+
+SLACK_TOKEN = None
+database = None
+ADMIN = ''
 
 def get_all_users(slack, channel_name):
     all_users = []
@@ -45,7 +46,7 @@ def get_active_users(slack, channel_name):
     return active_users
 
 def _drop_coin_target_users():
-    slack = Slack()
+    slack = Slack(SLACK_TOKEN)
     # all active users
     #users = get_active_users(slack, "general")
     # lucky user from active
@@ -58,7 +59,7 @@ def drop_coin():
     target_users = _drop_coin_target_users()
     if len(target_users) == 0:
         return
-    slack = Slack()
+    slack = Slack(SLACK_TOKEN)
     usernames = [slack.get_username(user) for user in target_users]
     usernames_at = ["@" + username for username in usernames]
 
@@ -111,10 +112,15 @@ def freq():
 def coins(user):
     conn = sqlite3.connect(database)
     c = conn.cursor()
+    c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
     c.execute('''SELECT coins FROM coins WHERE user = \"{}\"'''.format(user))
-    result = c.fetchall()[0]
-    coins = result[0]
-    msg = u"@{} 有 {} 個金幣。".format(user, coins).encode('utf-8')
+    if len(c.fetchall()) == 0:
+        c.execute('''INSERT INTO coins (user, coins) VALUES (\"{}\", 0)'''.format(user))
+        msg = u"@{} 有 0 個金幣。".format(user).encode('utf-8')
+    else:
+        result = c.fetchall()[0]
+        coins = result[0]
+        msg = u"@{} 有 {} 個金幣。".format(user, coins).encode('utf-8')
     conn.close()
     return msg
 
@@ -216,8 +222,12 @@ def get_user_id(data):
     else:
         return None
 
-def process_message(data):
-    slack = Slack()
+def process_message(data, config={}):
+    global ADMIN, database, SLACK_TOKEN
+    ADMIN = config.get('ADMIN', '')
+    database = config.get('database', None)
+    SLACK_TOKEN = config.get('SLACK_TOKEN', None)
+    slack = Slack(SLACK_TOKEN)
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
     user_id = get_user_id(data)
