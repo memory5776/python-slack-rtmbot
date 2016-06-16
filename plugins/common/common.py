@@ -113,27 +113,27 @@ def coins(user):
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
-    c.execute('''SELECT coins FROM coins WHERE user = \"{}\"'''.format(user))
+    c.execute('''SELECT coins FROM coins WHERE user = \"{}\"'''.format(user['name']))
     if len(c.fetchall()) == 0:
-        c.execute('''INSERT INTO coins (user, coins) VALUES (\"{}\", 0)'''.format(user))
-        msg = u"@{} 有 0 個金幣。".format(user).encode('utf-8')
+        c.execute('''INSERT INTO coins (user, coins) VALUES (\"{}\", 0)'''.format(user['name']))
+        msg = u"<@{}|{}> 有 0 個金幣。".format(user['id'], user['name']).encode('utf-8')
     else:
         result = c.fetchall()[0]
         coins = result[0]
-        msg = u"@{} 有 {} 個金幣。".format(user, coins).encode('utf-8')
+        msg = u"<@{}|{}> 有 {} 個金幣。".format(user['id'], user['name'], coins).encode('utf-8')
     conn.close()
     return msg
 
-def unary_command(cmd, channel_id, username, slack):
+def unary_command(cmd, channel_id, user, slack):
     bot_icon = None
     if cmd[1:] in simple_unary_commands:
-        msg = simple_unary_commands[cmd[1:]].format(username).encode('utf-8')
+        msg = simple_unary_commands[cmd[1:]].format(user['name']).encode('utf-8')
     elif cmd in ['!flist']:
         msg = flist()
     elif cmd in ['!freq']:
         msg = freq()
     elif cmd in ["!coins"]:
-        msg = coins(username)
+        msg = coins(user)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
@@ -180,17 +180,17 @@ def add_coins_all(target, coins):
 def binary_command(cmd, target, channel_id, user, slack):
     bot_icon = None
     if cmd[1:] in simple_binary_commands:
-        msg = simple_binary_commands[cmd[1:]].format(user, target).encode('utf-8')
+        msg = simple_binary_commands[cmd[1:]].format(user['name'], target).encode('utf-8')
     elif cmd in ["!add_coins_all"]:
-        if user == ADMIN:
+        if user['name'] == ADMIN:
             coins = int(target)
             msg = add_coins_all(target, coins)
         else:
             return
     elif cmd in ["!friend"]:
-        msg = friend(user, target)
+        msg = friend(user['name'], target)
     elif cmd in ["!yfriend"]:
-        msg = yfriend(user, target)
+        msg = yfriend(user['name'], target)
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
@@ -230,12 +230,13 @@ def process_message(data, config={}):
     slack = Slack(SLACK_TOKEN)
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
-    user_id = get_user_id(data)
-    if not user_id:
+    user = {}
+    user['id'] = get_user_id(data)
+    if not user['id']:
         return
 
-    user = slack.get_username(user_id)
-    print("[general] msg: {} from user: {}, channel: {} ({})".format(data['text'].encode('utf8'), user, channelname, channel_id))
+    user['name'] = slack.get_username(user['id'])
+    print("[general] msg: {} from username: {}, channel: {} ({})".format(data['text'].encode('utf8'), user['name'], channelname, channel_id))
 
     if data['text'].startswith("!"):
         msgs = data['text'].split(" ")
@@ -247,5 +248,5 @@ def process_message(data, config={}):
             cmd = msgs[0]
             unary_command(cmd, channel_id, user, slack)
 
-    update_freq(data['text'], user)
+    update_freq(data['text'], user['name'])
 
