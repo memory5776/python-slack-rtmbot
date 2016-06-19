@@ -7,6 +7,7 @@ import logging
 
 from slackclient import SlackClient
 
+from slack_util import Slack
 sys.dont_write_bytecode = True
 
 
@@ -48,6 +49,7 @@ class RtmBot(object):
         self.slack_client.rtm_connect()
 
     def _start(self):
+        self.slack_util = Slack(self.token)
         self.connect()
         self.load_plugins()
         while True:
@@ -110,6 +112,7 @@ class RtmBot(object):
                 logging.info("config found for: " + name)
             plugin_config = self.config.get(name, {})
             plugin_config['DEBUG'] = self.debug
+            plugin_config['slack_client'] = self.slack_util
             self.bot_plugins.append(Plugin(name, plugin_config))
 
 

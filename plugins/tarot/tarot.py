@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 crontable = []
 outputs = []
-from slack_util import Slack
 #from plugins.general.general import update_freq
 import sqlite3
 from pprint import pprint
@@ -13,15 +12,16 @@ friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 
-SLACK_TOKEN = None
 ADMIN = ''
 database = None
+slack = None
 
 def tarot(user):
     msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
     return msg
 
-def unary_command(cmd, channel_id, username, slack):
+def unary_command(cmd, channel_id, username):
+    global slack
     bot_icon = None
     if cmd in ["!tarot"]:
         msg = tarot(username)
@@ -50,7 +50,8 @@ def tarot2(user, target):
         msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
     return msg
 
-def binary_command(cmd, target, channel_id, username, slack):
+def binary_command(cmd, target, channel_id, username):
+    global slack
     bot_icon = None
     if cmd in ["!tarot"]:
         msg = tarot2(username, target)
@@ -65,7 +66,6 @@ def update_freq(text, user):
         freq_table = 'cmd_freq'
     else:
         freq_table = 'chat_freq'
-    c.execute('''create table if not exists {} (user TEXT PRIMARY KEY, count INT)'''.format(freq_table))
     c.execute('''INSERT OR REPLACE INTO {} (user, count)
                  VALUES ( \'{}\',
                      COALESCE((SELECT count FROM {} WHERE user = \'{}\'), 0)
@@ -83,11 +83,10 @@ def get_user_id(data):
         return None
 
 def process_message(data, config={}):
-    global ADMIN, database, SLACK_TOKEN
+    global ADMIN, database, slack
     ADMIN = config.get('ADMIN', '')
     database = config.get('database', None)
-    SLACK_TOKEN = config.get('SLACK_TOKEN', None)
-    slack = Slack(SLACK_TOKEN)
+    slack = config.get('slack_client', None)
     channel_id = data['channel']
     channelname = slack.get_channelname(channel_id)
     user_id = get_user_id(data)
@@ -100,10 +99,10 @@ def process_message(data, config={}):
         if len(msgs) == 2:
             cmd = msgs[0]
             target = msgs[1]
-            binary_command(cmd, target, channel_id, user, slack)
+            binary_command(cmd, target, channel_id, user)
         elif len(msgs) == 1:
             cmd = msgs[0]
-            unary_command(cmd, channel_id, user, slack)
+            unary_command(cmd, channel_id, user)
 
     update_freq(data['text'], user)
 
