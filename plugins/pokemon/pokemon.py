@@ -112,7 +112,7 @@ def get_pokemon(user, channel_id, conn):
     if user == 'orinpix':
         p = Pokemon(random.choice(orinpix_pokemon_candidate))
         zh_name = pd.race_map[p.race]["zh_name"]
-        bot_icon = ":" + str(p.race).zfill(3) + ":"
+        bot_icon = ":" + str(p.race).zfill(4) + ":"
         msg = u"@{} 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, zh_name)
         return bot_icon, msg
 
@@ -127,7 +127,7 @@ def get_pokemon(user, channel_id, conn):
     # gacha!
     p = Pokemon()
     print('get pokemon #{}'.format(p.race))
-    bot_icon = ":" + str(p.race).zfill(3) + ":"
+    bot_icon = ":" + str(p.race).zfill(4) + ":"
     zh_name = pd.race_map[p.race]["zh_name"]
     r_hp = pd.race_map[p.race]["hp"]
     r_atk = pd.race_map[p.race]["atk"]
@@ -149,7 +149,7 @@ def pokemons(user, conn):
     msg = []
     for i, pokemon in enumerate(result):
         race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = pokemon
-        msg.append(u"{}:{}:".format(i+1, str(race).zfill(3)).encode('utf-8'))
+        msg.append(u"{}:{}:".format(i+1, str(race).zfill(4)).encode('utf-8'))
     return " ".join(msg)
 
 def pokemon_give_new(user, race, conn):
@@ -161,7 +161,7 @@ def pokemon_give_new(user, race, conn):
     r_def = pd.race_map[p.race]["def"]
     r_spd = pd.race_map[p.race]["spd"]
     print('get pokemon #{}'.format(p.race))
-    bot_icon = ":" + str(p.race).zfill(3) + ":"
+    bot_icon = ":" + str(p.race).zfill(4) + ":"
     msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
 
     c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))

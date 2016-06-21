@@ -220,6 +220,9 @@ def process_message(data, config={}):
     channelname = slack.get_channelname(channel_id)
     user = {}
     user['id'] = get_user_id(data)
+    if not user['id']:
+        return
+
     conn = sqlite3.connect(database)
     c = conn.cursor()
     import pprint
@@ -235,8 +238,6 @@ def process_message(data, config={}):
     c.execute('''create table if not exists coins (user TEXT PRIMARY KEY, coins INTEGER DEFAULT 0)''')
     c.execute('''create table if not exists pokemons (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, race INTEGER, level INTEGER, exp INTEGER, i_hp INTEGER, i_atk INTEGER, i_def INTEGER, i_satk INTEGER, i_sdef INTEGER, i_spd INTEGER)''')
     conn.commit()
-    if not user['id']:
-        return
 
     user['name'] = slack.get_username(user['id'])
     print("[general] msg: {} from username: {}, channel: {} ({})".format(data['text'].encode('utf8'), user['name'], channelname, channel_id))
