@@ -156,10 +156,19 @@ def yfriend(user, target, conn):
         msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
+def add_coins(target, coins, conn):
+    c = conn.cursor()
+    c.execute('''INSERT OR REPLACE INTO coins (user, coins)
+                 VALUES ( \'{}\', COALESCE((SELECT coins FROM coins WHERE user = \'{}\'), 0)
+                 );'''.format(user, user))
+    c.execute('''UPDATE coins SET coins = coins + {} WHERE user = \'{}\';'''.format(coins, user))
+    conn.commit()
+    msg = u"@{} 得到了 {} coins！".encode('utf-8').format(user, coins)
+    return msg
+
 def add_coins_all(target, coins, conn):
     c = conn.cursor()
     for user in slack.user_info:
-        print user
         c.execute('''INSERT OR REPLACE INTO coins (user, coins)
                      VALUES ( \'{}\', COALESCE((SELECT coins FROM coins WHERE user = \'{}\'), 0)
                      );'''.format(user, user))

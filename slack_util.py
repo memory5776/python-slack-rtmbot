@@ -28,7 +28,7 @@ class Slack(object):
             for user in r['members']:
                 self.user_info[user['name']] = user['id']
 
-    def post_message(self, channel, text, icon_emoji, username='schubot'):
+    def post_message(self, channel, text, icon_emoji, username='oripyon'):
         if icon_emoji == None:
             icon_emoji = ':rabbit:'
         self.sc.api_call("chat.postMessage", channel=channel, text=text, username=username, icon_emoji=icon_emoji)
