@@ -91,7 +91,7 @@ class SummonedPokemon(object):
         ''' initialize an existed pokemon from database'''
         conn = sqlite3.connect(database)
         c = conn.cursor()
-        c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {}'''.format(id))
+        c.execute("SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {0}".format(id))
         r = c.fetchall()[0]
         conn.close()
         self.race, self.level, self.exp = r[0:3]
@@ -251,14 +251,29 @@ def _duel(team1, team2, msg):
         sp2.c_value["hp"] -= final_damage
         if sp2.c_value["hp"] <= 0:
             msg += u"{} 死去\n".encode('utf-8').format(pokemon2_name)
-            return team1, msg
+            return team1, team2, msg
 
         (is_critical, final_damage) = _atk(sp2, sp1)
         msg += u"{} 對 {} 使出 {} 造成 {} 點{}傷害。\n{} hp: {} -> {}\n".encode('utf-8').format(pokemon2_name, pokemon1_name, random.choice(SKILL_LIST), final_damage, "暴擊" if is_critical else "", pokemon1_name, sp1.c_value["hp"], sp1.c_value["hp"] - final_damage)
         sp1.c_value["hp"] -= final_damage
         if sp1.c_value["hp"] <= 0:
             msg += u"{} 死去\n".encode('utf-8').format(pokemon1_name)
-            return team2, msg
+            return team2, team2, msg
+
+def update_level():
+    pass
+
+def add_exp(p_id, exp_delta, conn):
+    c = conn.cursor()
+    c.execute("SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {}".format(p_id))
+    result = c.fetchall()[0]
+    race = result['race']
+    exp = result['exp']
+    #c.execute('''UPDATE pokemons SET exp = {} WHERE id = {};'''.format(exp + exp_delta, p_id))
+    conn.commit()
+    msg = u"@{} 得到了 {} 點經驗！".encode('utf-8').format(user, exp)
+    pd.get_level(pd.race_map[race]['level_exp_type'], exp + exp_delta)
+    return msg
 
 def add_coins(user, coins, conn):
     c = conn.cursor()
@@ -286,18 +301,19 @@ def fight(user, target, pokemon_index, conn):
         if (target, user) in arena_standby:
             msg = u"@{} 接受了 @{} 的挑戰並使用 {} 應戰！\n".format(user, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
             team1 = (target, arena_standby[(target, user)])
-            team2 = (user, id)
-            winner, msg = _duel(team1, team2, msg)
-            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winner[1]))
+            team2 = (user, {"id": id, "race": race, "level": level})
+            winner, loser, msg = _duel(team1, team2, msg)
+            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winner[1]['id']))
             winner_pokemon_name = pd.race_map[c.fetchall()[0][0]]['zh_name']
             msg += u"勝利者是 @{} 與他的 {}！\n".format(winner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
             msg += add_coins(winner[0], 1, conn)
-            #exp_gain = loser.level * loser.kill_basic_exp
-            #msg += add_exp(winner[0], exp_gain, conn)
+            exp_gain = loser[1]['level'] * pd.race_map[loser[1]['race']]['kill_basic_exp']
+            msg += add_exp(winner[1]['id'], exp_gain, conn)
+            msg += add_exp(loser[1]['id'], int(exp_gain/2), conn)
             arena_standby.pop((target, user))
         else:
             msg = u"@{} 使用 {} 跟 @{} 提出決鬥！（從 `!pokemons` 裡面選擇一個用 `!fight` 應戰）".format(user, unicode(pokemon_name, 'utf-8'), target, user).encode('utf-8')
-            arena_standby[(user, target)] = id
+            arena_standby[(user, target)] = {"id": id, "race": race, "level": level}
     return msg
 
 def unary_command(cmd, channel_id, username, conn):
