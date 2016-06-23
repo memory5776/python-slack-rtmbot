@@ -91,7 +91,7 @@ class SummonedPokemon(object):
         ''' initialize an existed pokemon from database'''
         conn = sqlite3.connect(database)
         c = conn.cursor()
-        c.execute("SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {0}".format(id))
+        c.execute("SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {}".format(id))
         r = c.fetchall()[0]
         conn.close()
         self.race, self.level, self.exp = r[0:3]
@@ -238,8 +238,8 @@ def _atk(sp1, sp2):
     return (is_critical, final_damage)
 
 def _duel(team1, team2, msg):
-    pokemon1_id = team1[1]
-    pokemon2_id = team2[1]
+    pokemon1_id = team1[1]['id']
+    pokemon2_id = team2[1]['id']
     sp1 = SummonedPokemon(pokemon1_id)
     sp2 = SummonedPokemon(pokemon2_id)
     pokemon1_name = pd.race_map[sp1.race]['zh_name']
@@ -258,7 +258,7 @@ def _duel(team1, team2, msg):
         sp1.c_value["hp"] -= final_damage
         if sp1.c_value["hp"] <= 0:
             msg += u"{} 死去\n".encode('utf-8').format(pokemon1_name)
-            return team2, team2, msg
+            return team2, team1, msg
 
 def update_level():
     pass
@@ -267,12 +267,17 @@ def add_exp(p_id, exp_delta, conn):
     c = conn.cursor()
     c.execute("SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE id = {}".format(p_id))
     result = c.fetchall()[0]
-    race = result['race']
-    exp = result['exp']
-    #c.execute('''UPDATE pokemons SET exp = {} WHERE id = {};'''.format(exp + exp_delta, p_id))
+    race = result[0]
+    level = result[1]
+    exp = result[2]
+    c.execute('''UPDATE pokemons SET exp = {} WHERE id = {};'''.format(exp + exp_delta, p_id))
     conn.commit()
-    msg = u"@{} 得到了 {} 點經驗！".encode('utf-8').format(user, exp)
-    pd.get_level(pd.race_map[race]['level_exp_type'], exp + exp_delta)
+    msg = u"@{} 得到了 {} 點經驗！".encode('utf-8').format(pd.race_map[race]['zh_name'], exp_delta)
+    new_level = pd.get_level(pd.race_map[race]['level_exp_type'], exp + exp_delta)
+    if level != new_level:
+        msg += u"升到 {} 級了！！".encode('utf-8').format(new_level)
+        c.execute('''UPDATE pokemons SET level = {} WHERE id = {};'''.format(new_level, p_id))
+    msg += u"\n".encode('utf-8')
     return msg
 
 def add_coins(user, coins, conn):
@@ -303,11 +308,11 @@ def fight(user, target, pokemon_index, conn):
             team1 = (target, arena_standby[(target, user)])
             team2 = (user, {"id": id, "race": race, "level": level})
             winner, loser, msg = _duel(team1, team2, msg)
-            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winner[1]['id']))
-            winner_pokemon_name = pd.race_map[c.fetchall()[0][0]]['zh_name']
+            winner_pokemon_name = pd.race_map[winner[1]['race']]['zh_name']
             msg += u"勝利者是 @{} 與他的 {}！\n".format(winner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
             msg += add_coins(winner[0], 1, conn)
-            exp_gain = loser[1]['level'] * pd.race_map[loser[1]['race']]['kill_basic_exp']
+            #exp_gain = loser[1]['level'] * pd.race_map[loser[1]['race']]['kill_basic_exp']
+            exp_gain = pd.race_map[loser[1]['race']]['kill_basic_exp']
             msg += add_exp(winner[1]['id'], exp_gain, conn)
             msg += add_exp(loser[1]['id'], int(exp_gain/2), conn)
             arena_standby.pop((target, user))
