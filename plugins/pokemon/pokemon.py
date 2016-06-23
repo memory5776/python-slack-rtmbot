@@ -2,7 +2,6 @@
 crontable = []
 outputs = []
 from slack_util import Slack
-#from plugins.general.general import update_freq
 import sqlite3
 from pprint import pprint
 import sys
@@ -10,7 +9,6 @@ import json
 import random
 import csv
 import yaml
-from plugins.common.common import add_coins
 friend_await = {}
 friend_sets = []
 channel_map = {"general": "C0J4UTXL0"}
@@ -262,6 +260,16 @@ def _duel(team1, team2, msg):
             msg += u"{} 死去\n".encode('utf-8').format(pokemon1_name)
             return team2, msg
 
+def add_coins(user, coins, conn):
+    c = conn.cursor()
+    c.execute('''INSERT OR REPLACE INTO coins (user, coins)
+                 VALUES ( \'{}\', COALESCE((SELECT coins FROM coins WHERE user = \'{}\'), 0)
+                 );'''.format(user, user))
+    c.execute('''UPDATE coins SET coins = coins + {} WHERE user = \'{}\';'''.format(coins, user))
+    conn.commit()
+    msg = u"@{} 得到了 {} coins！".encode('utf-8').format(user, coins)
+    return msg
+
 def fight(user, target, pokemon_index, conn):
     global arena_standby, pd
     c = conn.cursor()
@@ -279,10 +287,10 @@ def fight(user, target, pokemon_index, conn):
             msg = u"@{} 接受了 @{} 的挑戰並使用 {} 應戰！\n".format(user, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
             team1 = (target, arena_standby[(target, user)])
             team2 = (user, id)
-            winnner, msg = _duel(team1, team2, msg)
-            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winnner[1]))
+            winner, msg = _duel(team1, team2, msg)
+            c.execute('''SELECT race FROM pokemons WHERE id = {}'''.format(winner[1]))
             winner_pokemon_name = pd.race_map[c.fetchall()[0][0]]['zh_name']
-            msg += u"勝利者是 @{} 與他的 {}！\n".format(winnner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
+            msg += u"勝利者是 @{} 與他的 {}！\n".format(winner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
             msg += add_coins(winner[0], 1, conn)
             #exp_gain = loser.level * loser.kill_basic_exp
             #msg += add_exp(winner[0], exp_gain, conn)
