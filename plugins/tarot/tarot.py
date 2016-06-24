@@ -17,7 +17,7 @@ database = None
 slack = None
 
 def tarot(user):
-    msg = u"@{} 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
+    msg = u"<@{}|{}> 想問什麼呢？(!tarot love/work/health/money/joy/daily)".format(user).encode('utf-8')
     return msg
 
 def unary_command(cmd, channel_id, username):
@@ -33,7 +33,7 @@ def tarot2(user, target):
     card = random.choice(tarot_cards)
     msg = "{}/{}\n".format(card["nameCN"].encode('utf-8'), card["nameEN"])
     msg += "image: {}\n".format(card["url"])
-    msg += u"@{} 的".format(user).encode('utf-8')
+    msg += u"<@{}|{}> 的".format(user).encode('utf-8')
     if target in ["love","愛情"]:
         msg += "愛情：{}\n".format(card["love"].encode('utf-8'))
     elif target in ["work","工作"]:
