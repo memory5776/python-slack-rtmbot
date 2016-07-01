@@ -178,7 +178,7 @@ def pokemon_status(user, target, conn):
             potential_ability_str.append(u"速度")
         potential_sum = s_hp + s_atk + s_def + s_spd
         if potential_sum == 0:
-            potential = u"廢物"
+            potential = u"廢物".encode('utf-8')
         else:
             potential = u"{} {}項全能".format(" ".join(potential_ability_str), potential_sum).encode('utf-8')
         bot_icon = ":" + str(race).zfill(4) + ":"
