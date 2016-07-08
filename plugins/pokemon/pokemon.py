@@ -145,8 +145,10 @@ def get_pokemon(user, conn):
     r_hp = pd.race_map[p.race]["hp"]
     r_atk = pd.race_map[p.race]["atk"]
     r_def = pd.race_map[p.race]["def"]
+    r_satk = pd.race_map[p.race]["satk"]
+    r_sdef = pd.race_map[p.race]["sdef"]
     r_spd = pd.race_map[p.race]["spd"]
-    msg = u"@{} 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
+    msg = u"@{} 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻擊: {}(+{}), 防禦: {}(+{}), 特攻: {}(+{}), 特防: {}(+{}), 速度: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_satk, p.i_value['satk'], r_sdef, p.i_value['sdef'], r_spd, p.i_value['spd'],)
 
     print('start writing DB')
     # write DB
@@ -166,6 +168,8 @@ def pokemon_status(user, target, conn):
         s_hp = 1 if i_hp > 15 else 0
         s_atk = 1 if i_atk > 15 else 0
         s_def = 1 if i_def > 15 else 0
+        s_satk = 1 if i_satk > 15 else 0
+        s_sdef = 1 if i_sdef > 15 else 0
         s_spd = 1 if i_spd > 15 else 0
         potential_ability_str = []
         if s_hp:
@@ -174,9 +178,13 @@ def pokemon_status(user, target, conn):
             potential_ability_str.append(u"攻擊")
         if s_def:
             potential_ability_str.append(u"防禦")
+        if s_satk:
+            potential_ability_str.append(u"特攻")
+        if s_sdef:
+            potential_ability_str.append(u"特防")
         if s_spd:
             potential_ability_str.append(u"速度")
-        potential_sum = s_hp + s_atk + s_def + s_spd
+        potential_sum = s_hp + s_atk + s_def + s_satk + s_sdef + s_spd
         if potential_sum == 0:
             potential = u"廢物".encode('utf-8')
         else:
@@ -186,8 +194,10 @@ def pokemon_status(user, target, conn):
         r_hp = pd.race_map[race]["hp"]
         r_atk = pd.race_map[race]["atk"]
         r_def = pd.race_map[race]["def"]
+        r_satk = pd.race_map[race]["satk"]
+        r_sdef = pd.race_map[race]["sdef"]
         r_spd = pd.race_map[race]["spd"]
-        msg = u"@{} 的 {}: \nHP: {}({}), 攻: {}({}), 防: {}({}), 速: {}({})\n".encode('utf-8').format(user, zh_name, r_hp, i_hp, r_atk, i_atk, r_def, i_def, r_spd, i_spd,)
+        msg = u"@{} 的 {}: \nHP: {}({}), 攻擊: {}({}), 防禦: {}({}), 特攻: {}({}), 特防: {}({}), 速度: {}({})\n".encode('utf-8').format(user, zh_name, r_hp, i_hp, r_atk, i_atk, r_def, i_def, r_satk, i_satk, r_sdef, i_sdef, r_spd, i_spd,)
         msg += u"等級: {}, 經驗: {}, 屬於{}型".encode('utf-8').format(level, exp, potential)
     else:
         msg = u"{} 算數不太好".format(user).encode('utf-8')
@@ -210,10 +220,12 @@ def pokemon_give_new(user, race, conn):
     r_hp = pd.race_map[p.race]["hp"]
     r_atk = pd.race_map[p.race]["atk"]
     r_def = pd.race_map[p.race]["def"]
+    r_satk = pd.race_map[p.race]["satk"]
+    r_sdef = pd.race_map[p.race]["sdef"]
     r_spd = pd.race_map[p.race]["spd"]
     print('get pokemon #{}'.format(p.race))
     bot_icon = ":" + str(p.race).zfill(4) + ":"
-    msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
+    msg = u"@{} 給你一隻 {}！\nHP: {}(+{}), 攻擊: {}(+{}), 防禦: {}(+{}), 特攻: {}(+{}), 特防: {}(+{}), 速度: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_satk, p.i_value['satk'], r_sdef, p.i_value['sdef'], r_spd, p.i_value['spd'],)
 
     c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
     conn.commit()
