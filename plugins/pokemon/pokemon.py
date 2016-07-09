@@ -233,8 +233,14 @@ def pokemon_give_new(user, race, conn):
 
 def _atk(sp1, sp2):
     skill_base = 50
-    base_damage = ((2.0 * sp1.level + 10.0) / 250.0) * (sp1.c_value["atk"] * 1.0 / sp2.c_value["def"]) * skill_base + 2
-    print("((2.0 * sp1.level + 10) / 250.0) = {}, (sp1.c_value[\"atk\"] * 1.0 / sp2.c_value[\"def\"]): {}".format(((2.0 * sp1.level + 10) / 250.0), (sp1.c_value["atk"] * 1.0 / sp2.c_value["def"])))
+    if sp1.c_value["atk"] > sp1.c_value["satk"]:
+        attacker_atk = sp1.c_value["atk"]
+        defender_def = sp2.c_value["def"]
+    else:
+        attacker_atk = sp1.c_value["satk"]
+        defender_def = sp2.c_value["sdef"]
+    base_damage = ((2.0 * sp1.level + 10.0) / 250.0) * (attacker_atk * 1.0 / defender_def) * skill_base + 2
+    print("((2.0 * sp1.level + 10) / 250.0) = {}, (attacker_atk * 1.0 / defender_def): {}".format(((2.0 * sp1.level + 10) / 250.0), (attacker_atk * 1.0 / defender_def)))
     is_critical = False
     if random.random() < 0.1: # 10% change critical
         is_critical = True
