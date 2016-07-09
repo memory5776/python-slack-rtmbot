@@ -126,14 +126,14 @@ def get_pokemon(user, conn):
         p = Pokemon(random.choice(orinpix_pokemon_candidate))
         zh_name = pd.race_map[p.race]["zh_name"]
         bot_icon = ":" + str(p.race).zfill(4) + ":"
-        msg = u"<@{}|{}> 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, zh_name)
+        msg = u"<@{}|{}> 使用黃金寶貝球抓到了 {}！\n".encode('utf-8').format(user, user, zh_name)
         return bot_icon, msg
 
     c = conn.cursor()
     c.execute('''SELECT coins FROM coins WHERE user = \'{}\';'''.format(user))
     result = c.fetchall()
     if len(result) == 0 or result[0][0] < COIN_NEED_POKEMON:
-        return ":rabbit:", u"<@{}|{}> 沒錢能轉蛋了！".format(user).encode('utf-8')
+        return ":rabbit:", u"<@{}|{}> 沒錢能轉蛋了！".format(user, user).encode('utf-8')
 
     print('deduce money by 5')
     c.execute('''UPDATE coins SET coins = coins - {} WHERE user = \'{}\';'''.format(COIN_NEED_POKEMON, user))
@@ -145,8 +145,10 @@ def get_pokemon(user, conn):
     r_hp = pd.race_map[p.race]["hp"]
     r_atk = pd.race_map[p.race]["atk"]
     r_def = pd.race_map[p.race]["def"]
+    r_satk = pd.race_map[p.race]["satk"]
+    r_sdef = pd.race_map[p.race]["sdef"]
     r_spd = pd.race_map[p.race]["spd"]
-    msg = u"<@{}|{}> 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
+    msg = u"<@{}|{}> 使用寶貝球抓到了 {}！\nHP: {}(+{}), 攻擊: {}(+{}), 防禦: {}(+{}), 特攻: {}(+{}), 特防: {}(+{}), 速度: {}(+{})".encode('utf-8').format(user, user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_satk, p.i_value['satk'], r_sdef, p.i_value['sdef'], r_spd, p.i_value['spd'],)
 
     print('start writing DB')
     # write DB
@@ -166,6 +168,8 @@ def pokemon_status(user, target, conn):
         s_hp = 1 if i_hp > 15 else 0
         s_atk = 1 if i_atk > 15 else 0
         s_def = 1 if i_def > 15 else 0
+        s_satk = 1 if i_satk > 15 else 0
+        s_sdef = 1 if i_sdef > 15 else 0
         s_spd = 1 if i_spd > 15 else 0
         potential_ability_str = []
         if s_hp:
@@ -174,9 +178,13 @@ def pokemon_status(user, target, conn):
             potential_ability_str.append(u"攻擊")
         if s_def:
             potential_ability_str.append(u"防禦")
+        if s_satk:
+            potential_ability_str.append(u"特攻")
+        if s_sdef:
+            potential_ability_str.append(u"特防")
         if s_spd:
             potential_ability_str.append(u"速度")
-        potential_sum = s_hp + s_atk + s_def + s_spd
+        potential_sum = s_hp + s_atk + s_def + s_satk + s_sdef + s_spd
         if potential_sum == 0:
             potential = u"廢物".encode('utf-8')
         else:
@@ -186,11 +194,13 @@ def pokemon_status(user, target, conn):
         r_hp = pd.race_map[race]["hp"]
         r_atk = pd.race_map[race]["atk"]
         r_def = pd.race_map[race]["def"]
+        r_satk = pd.race_map[race]["satk"]
+        r_sdef = pd.race_map[race]["sdef"]
         r_spd = pd.race_map[race]["spd"]
-        msg = u"<@{}|{}> 的 {}: \nHP: {}({}), 攻: {}({}), 防: {}({}), 速: {}({})\n".encode('utf-8').format(user, zh_name, r_hp, i_hp, r_atk, i_atk, r_def, i_def, r_spd, i_spd,)
+        msg = u"<@{}|{}> 的 {}: \nHP: {}({}), 攻擊: {}({}), 防禦: {}({}), 特攻: {}({}), 特防: {}({}), 速度: {}({})\n".encode('utf-8').format(user, user, zh_name, r_hp, i_hp, r_atk, i_atk, r_def, i_def, r_satk, i_satk, r_sdef, i_sdef, r_spd, i_spd,)
         msg += u"等級: {}, 經驗: {}, 屬於{}型".encode('utf-8').format(level, exp, potential)
     else:
-        msg = u"<@{}|{}> 算數不太好".format(user).encode('utf-8')
+        msg = u"<@{}|{}> 算數不太好".format(user, user).encode('utf-8')
     return bot_icon, msg
 
 def pokemons(user, conn):
@@ -210,10 +220,12 @@ def pokemon_give_new(user, race, conn):
     r_hp = pd.race_map[p.race]["hp"]
     r_atk = pd.race_map[p.race]["atk"]
     r_def = pd.race_map[p.race]["def"]
+    r_satk = pd.race_map[p.race]["satk"]
+    r_sdef = pd.race_map[p.race]["sdef"]
     r_spd = pd.race_map[p.race]["spd"]
     print('get pokemon #{}'.format(p.race))
     bot_icon = ":" + str(p.race).zfill(4) + ":"
-    msg = u"<@{}|{}> 給你一隻 {}！\nHP: {}(+{}), 攻: {}(+{}), 防: {}(+{}), 速: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_spd, p.i_value['spd'],)
+    msg = u"<@{}|{}> 給你一隻 {}！\nHP: {}(+{}), 攻擊: {}(+{}), 防禦: {}(+{}), 特攻: {}(+{}), 特防: {}(+{}), 速度: {}(+{})".encode('utf-8').format(user, zh_name, r_hp, p.i_value['hp'], r_atk, p.i_value['atk'], r_def, p.i_value['def'], r_satk, p.i_value['satk'], r_sdef, p.i_value['sdef'], r_spd, p.i_value['spd'],)
 
     c.execute('''INSERT INTO pokemons (user, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd) VALUES (\'{}\', {}, {}, {}, {}, {}, {}, {}, {}, {});'''.format(user, p.race, p.level, p.exp, p.i_value['hp'], p.i_value['atk'], p.i_value['def'], p.i_value['satk'], p.i_value['sdef'], p.i_value['spd']))
     conn.commit()
@@ -272,7 +284,7 @@ def add_exp(p_id, exp_delta, conn):
     exp = result[2]
     c.execute('''UPDATE pokemons SET exp = {} WHERE id = {};'''.format(exp + exp_delta, p_id))
     conn.commit()
-    msg = u"<@{}|{}> 得到了 {} 點經驗！".encode('utf-8').format(pd.race_map[race]['zh_name'], exp_delta)
+    msg = u"{} 得到了 {} 點經驗！".encode('utf-8').format(pd.race_map[race]['zh_name'], exp_delta)
     new_level = pd.get_level(pd.race_map[race]['level_exp_type'], exp + exp_delta)
     if level != new_level:
         msg += u"升到 {} 級了！！".encode('utf-8').format(new_level)
@@ -287,7 +299,7 @@ def add_coins(user, coins, conn):
                  );'''.format(user, user))
     c.execute('''UPDATE coins SET coins = coins + {} WHERE user = \'{}\';'''.format(coins, user))
     conn.commit()
-    msg = u"<@{}|{}> 得到了 {} coins！".encode('utf-8').format(user, coins)
+    msg = u"<@{}|{}> 得到了 {} coins！".encode('utf-8').format(user, user, coins)
     return msg
 
 def fight(user, target, pokemon_index, conn):
@@ -296,20 +308,20 @@ def fight(user, target, pokemon_index, conn):
     c.execute('''SELECT id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
     result = c.fetchall()
     if pokemon_index > len(result):
-        msg =  u"<@{}|{}> 你沒有那麼多神奇寶貝！".format(user).encode('utf-8')        
+        msg =  u"<@{}|{}> 你沒有那麼多神奇寶貝！".format(user, user).encode('utf-8')
     elif user == target:
-        msg =  u"<@{}|{}> 你不是武藤遊戲，無法跟自己決鬥。".format(user).encode('utf-8')
+        msg =  u"<@{}|{}> 你不是武藤遊戲，無法跟自己決鬥。".format(user, user).encode('utf-8')
     else:
         picked_pokemon = result[pokemon_index -1]
         id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = picked_pokemon
         pokemon_name = pd.race_map[race]['zh_name']
         if (target, user) in arena_standby:
-            msg = u"<@{}|{}> 接受了 <@{}|{}> 的挑戰並使用 {} 應戰！\n".format(user, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
+            msg = u"<@{}|{}> 接受了 <@{}|{}> 的挑戰並使用 {} 應戰！\n".format(user, user, target, target, unicode(pokemon_name, 'utf-8')).encode('utf-8')
             team1 = (target, arena_standby[(target, user)])
             team2 = (user, {"id": id, "race": race, "level": level})
             winner, loser, msg = _duel(team1, team2, msg)
             winner_pokemon_name = pd.race_map[winner[1]['race']]['zh_name']
-            msg += u"勝利者是 <@{}|{}> 與他的 {}！\n".format(winner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
+            msg += u"勝利者是 <@{}|{}> 與他的 {}！\n".format(winner[0], winner[0], unicode(winner_pokemon_name, 'utf-8')).encode('utf-8')
             msg += add_coins(winner[0], 1, conn)
             #exp_gain = loser[1]['level'] * pd.race_map[loser[1]['race']]['kill_basic_exp']
             exp_gain = pd.race_map[loser[1]['race']]['kill_basic_exp']
@@ -356,7 +368,7 @@ def trinary_command(cmd, target, something, channel_id, user, conn):
         except Exception, e:
             import traceback
             traceback.print_exc()
-            msg = u"<@{}|{}> 錯誤！{}".format(user, e).encode('utf-8')
+            msg = u"<@{}|{}> 錯誤！{}".format(user, user, e).encode('utf-8')
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
