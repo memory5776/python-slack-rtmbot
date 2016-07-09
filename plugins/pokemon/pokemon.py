@@ -160,11 +160,13 @@ def get_pokemon(user, conn):
 def pokemon_status(user, target, conn):
     global pd
     c = conn.cursor()
-    c.execute('''SELECT race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
+    c.execute('''SELECT id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
     result = c.fetchall()
     bot_icon = None
-    if target <= len(result):
-        race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = result[target - 1]
+    if target > len(result):
+        msg = u"<@{}|{}> 算數不太好".format(user, user).encode('utf-8')
+    else:
+        id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = result[target - 1]
         s_hp = 1 if i_hp > 15 else 0
         s_atk = 1 if i_atk > 15 else 0
         s_def = 1 if i_def > 15 else 0
@@ -199,8 +201,22 @@ def pokemon_status(user, target, conn):
         r_spd = pd.race_map[race]["spd"]
         msg = u"<@{}|{}> 的 {}: \nHP: {}({}), 攻擊: {}({}), 防禦: {}({}), 特攻: {}({}), 特防: {}({}), 速度: {}({})\n".encode('utf-8').format(user, user, zh_name, r_hp, i_hp, r_atk, i_atk, r_def, i_def, r_satk, i_satk, r_sdef, i_sdef, r_spd, i_spd,)
         msg += u"等級: {}, 經驗: {}, 屬於{}型".encode('utf-8').format(level, exp, potential)
-    else:
+    return bot_icon, msg
+
+def pokemon_info(user, target, conn):
+    global pd
+    c = conn.cursor()
+    c.execute('''SELECT id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd FROM pokemons WHERE user = \"{}\"'''.format(user))
+    result = c.fetchall()
+    bot_icon = None
+    if target > len(result):
         msg = u"<@{}|{}> 算數不太好".format(user, user).encode('utf-8')
+    else:
+        p_id, race, level, exp, i_hp, i_atk, i_def, i_satk, i_sdef, i_spd = result[target - 1]
+        zh_name = pd.race_map[race]["zh_name"]
+        p = SummonedPokemon(p_id)
+        c_hp, c_atk, c_def, c_satk, c_sdef, c_spd = (p.c_value['hp'], p.c_value['atk'], p.c_value['def'], p.c_value['satk'], p.c_value['sdef'], p.c_value['spd'])
+        msg = u"<@{}|{}> 的 {} 目前狀態: \n等級: {}, 經驗: {}, HP: {}, 攻擊: {}, 防禦: {}, 特攻: {}, 特防: {}, 速度: {}\n".encode('utf-8').format(user, user, zh_name, level, exp, c_hp, c_atk, c_def, c_satk, c_sdef, c_spd,)
     return bot_icon, msg
 
 def pokemons(user, conn):
@@ -358,18 +374,23 @@ def binary_command(cmd, target, channel_id, username, conn):
         return
     slack.post_message(channel_id, msg, bot_icon)
 
-def trinary_command(cmd, target, something, channel_id, user, conn):
+def trinary_command(cmd, target, arg3, channel_id, user, conn):
     global slack
     bot_icon = None
     if cmd in ['!pokemon_give_new']:
-        race = int(something)
+        race = int(arg3)
         if user == ADMIN:
             msg = pokemon_give_new(target, race, conn)
         else:
             return
+    elif cmd in ['!pokemon', '!poke', '!po']:
+        if target == 'info':
+            msg = pokemon_info(user, int(arg3), conn)
+        elif target == 'hidden':
+            msg = pokemon_hidden_info(user, int(arg3), conn)
     elif cmd in ['!fight']:
         try:
-            pokemon_index = int(something)
+            pokemon_index = int(arg3)
             msg = fight(user, target, pokemon_index, conn)
         except Exception, e:
             import traceback
