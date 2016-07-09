@@ -136,24 +136,24 @@ def friend(user, target):
         friend_await[user] = []
     if target not in friend_await[user]:
         friend_await[user].append(target)
-        msg = u"@{} 想跟 @{} 做朋友（輸入 !yfriend {} 同意）".format(user, target, user)
+        msg = u"<@{}|{}> 想跟 <@{}|{}> 做朋友（輸入 !yfriend {} 同意）".format(user, target, user)
     else:
-        msg = u"@{} 人家還沒回應你在急屁急".format(user)
+        msg = u"<@{}|{}> 人家還沒回應你在急屁急".format(user)
     return msg
 
 def yfriend(user, target, conn):
     if target in friend_await:
         if user in friend_await[target]:
             c = conn.cursor()
-            msg = u"@{} 接受了 @{} 的好友邀請，現在他們是好碰友".format(user, target)
+            msg = u"<@{}|{}> 接受了 <@{}|{}> 的好友邀請，現在他們是好碰友".format(user, target)
             #friend_sets.append(set([user, target]))
             c.execute('''INSERT INTO friends (user_a, user_b) VALUES (\'{}\', \'{}\');'''.format(user, target))
             friend_await[target].remove(user)
             conn.commit()
         else:
-            msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
+            msg = u"<@{}|{}> 沒有想要跟你做朋友好ㄇ".format(target)
     else:
-        msg = u"@{} 沒有想要跟你做朋友好ㄇ".format(target)
+        msg = u"<@{}|{}> 沒有想要跟你做朋友好ㄇ".format(target)
     return msg
 
 #def add_coins(user, coins, conn):
