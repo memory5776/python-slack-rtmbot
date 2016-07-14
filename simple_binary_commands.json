@@ -13,6 +13,8 @@
     "nodeal": "@{} 否決了跟 @{} 的交易。:wave:",
     "work": "@{} 監督著 @{} 辛勤地工作:ant::ant::ant:",
     "offwork": "@{} 提醒 @{} 該下班了！:clock5:",
-    "police": "@{} 叫了警察把 @{} 抓走了。:police_car:（警察叔叔就是這個人！）"
+    "police": "@{} 叫了警察把 @{} 抓走了。:police_car:",
+    "court": "@{} 加入了陪審團，表決結果： @{} 有罪！:scales:",
+    "prison": "經由 @{} 起訴 k法官判決 @{} 有罪！！！:prison:"
 }
 
