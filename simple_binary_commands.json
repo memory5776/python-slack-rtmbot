@@ -15,8 +15,8 @@
     "offwork": "@{} 提醒 @{} 該下班了！:clock5:",
     "police": "@{} 叫了警察把 @{} 抓走了。:police_car: :police_car: :police_car:",
     "judgement": "@{} 傳被告@{} 出庭，請各位陪審團表決！:scales:",
-    "guilty": "@{} 認為@{} 有罪！:scales:"
-    "notguilty": "@{} 認為@{} 無罪！:scales:"
+    "guilty": "@{} 認為@{} 有罪！:scales:",
+    "notguilty": "@{} 認為@{} 無罪！:scales:",
     "prison": "經由 @{} 起訴 k法官判決 @{} 有罪！！！:prison:",
     "slap": "@{} 賞了 @{} 一巴掌。:slap:"
 }
