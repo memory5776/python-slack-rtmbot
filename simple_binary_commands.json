@@ -18,6 +18,8 @@
     "guilty": "@{} 認為@{} 有罪！:scales:",
     "notguilty": "@{} 認為@{} 無罪！:scales:",
     "prison": "經由 @{} 起訴 k法官判決 @{} 有罪！！！:prison:",
+    "poison": "@{} 在 @{} 的茶裡下了毒！:toxic:",
+    "sneak": "@{} 偷走了 @{} 桌上的下午茶！！！:troll:",
     "slap": "@{} 賞了 @{} 一巴掌。:slap:"
 }
 
