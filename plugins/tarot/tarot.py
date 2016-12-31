@@ -10,6 +10,7 @@ import csv
 friend_await = {}
 friend_sets = []
 tarot_cards = json.load(open('tarot.json'))
+multi_tarot_cards = json.load(open('mtarot.json'))
 channel_map = {"general": "C0J4UTXL0"}
 
 ADMIN = ''
@@ -50,11 +51,28 @@ def tarot2(user, target):
         msg += "謎樣？：{}\n".format(card["conclusion"].encode('utf-8'))
     return msg
 
+def multi_tarot(user, target):
+    target = int(target)
+    cards = random.sample(multi_tarot_cards, target)
+    postfix_cards = []
+    for card in cards:
+        if random.random() > 0.5:
+            postfix_cards.append(card.encode('utf-8') + u"(正)".encode('utf-8'))
+        else:
+            postfix_cards.append(card.encode('utf-8') + u"(逆)".encode('utf-8'))
+    msg = " / ".join(postfix_cards)
+    return msg
+
 def binary_command(cmd, target, channel_id, username):
     global slack
     bot_icon = None
     if cmd in ["!tarot"]:
         msg = tarot2(username, target)
+    elif cmd in ["!mtarot"]:
+        try:
+            msg = multi_tarot(username, target)
+        except:
+            msg = u"哩勒公三小？".encode("utf-8")
     else:
         return
     slack.post_message(channel_id, msg, bot_icon)
