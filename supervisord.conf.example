@@ -1,3 +1,11 @@
+[program:python-slackbot-twitchat]
+directory=/srv/python-slackbot
+command=/srv/python-slackbot/__/bin/python rtmbot.py --config /srv/python-slackbot/twitchat.conf
+stdout_logfile=/var/log/python-slackbot-twitchat.out
+stderr_logfile=/var/log/python-slackbot-twitchat.err
+autostart=true
+autorestart=true
+
 [program:python-slackbot]
 directory=/srv/python-slackbot
 command=/srv/python-slackbot/__/bin/python rtmbot.py --config /srv/python-slackbot/trollers.conf
