@@ -1,0 +1,15 @@
+DEBUG: True
+SLACK_TOKEN: ""
+ADMIN: ""
+common:
+    ADMIN: ""
+    database: ""
+    SLACK_TOKEN: ""
+pokemon:
+    ADMIN: ""
+    database: ""
+    SLACK_TOKEN: ""
+tarot:
+    ADMIN: ""
+    database: ""
+    SLACK_TOKEN: ""
