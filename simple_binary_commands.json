@@ -13,7 +13,7 @@
     "nodeal": "@{} 否決了跟 @{} 的交易。:wave:",
     "work": "@{} 監督著 @{} 辛勤地工作:ant::ant::ant:",
     "offwork": "@{} 提醒 @{} 該下班了！:clock5:",
-    "police": "@{} 叫了警察把 @{} 抓走了。:police_car: :police_car: :police_car:",
+    "police": "@{} 叫了警察把 @{} 抓走了。:oncoming_police_car: :police_car: :police_car:",
     "judgement": "@{} 傳被告@{} 出庭，請各位陪審團表決！:scales:",
     "guilty": "@{} 認為@{} 有罪！:scales:",
     "notguilty": "@{} 認為@{} 無罪！:scales:",
@@ -21,6 +21,7 @@
     "poison": "@{} 在 @{} 的茶裡下了毒！:toxic:",
     "sneak": "@{} 偷走了 @{} 桌上的下午茶！！！:troll:",
     "slap": "@{} 賞了 @{} 一巴掌。:slap:",
-    "wakeup": "@{} 用力的搖了搖 @{}。快起床！:alarm_clock:"
+    "wakeup": "@{} 用力的搖了搖 @{}。快起床！:alarm_clock:",
+    "hospital": "@{} 叫了救護車把病得不輕的 @{} 送走了。:rotating_light: :hospital:"
 }
 
